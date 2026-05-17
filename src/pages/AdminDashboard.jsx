@@ -116,54 +116,89 @@ function AdminDashboard() {
   );
 
   const renderPatients = () => (
-    <div className="animate-fade-in" style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '32px', borderBottom: '1px solid #E2E8F0' }}>
+    <div className="animate-fade-in" style={{ background: 'white', border: '1px solid rgba(226, 232, 240, 0.8)', borderRadius: '24px', boxShadow: '0 20px 50px rgba(15, 23, 42, 0.03)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '36px', borderBottom: '1px solid #F1F5F9' }}>
          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#0F172A', margin: '0 0 8px 0' }}>Patient Registry</h2>
-            <p style={{ color: '#64748B', fontSize: '1rem', margin: 0 }}>Managing {patients.length} active patient profiles.</p>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0F172A', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>Patient Registry</h2>
+            <p style={{ color: '#64748B', fontWeight: 650, fontSize: '1rem', margin: 0 }}>Managing {patients.length} active patient profiles across the network.</p>
          </div>
          <div style={{ display: 'flex', gap: '16px' }}>
             <div style={{ position: 'relative' }}>
-               <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} size={20} />
-               <input type="text" placeholder="Search ID or Name" style={{ padding: '12px 16px 12px 44px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '1rem', width: '300px' }} />
+               <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} size={18} />
+               <input type="text" placeholder="Search ID or Name" style={{ padding: '12px 16px 12px 44px', borderRadius: '100px', border: '1px solid #E2E8F0', fontSize: '0.95rem', width: '280px', background: '#F8FAFC', fontWeight: 600, outline: 'none' }} />
             </div>
-            <button onClick={() => navigate('/register')} style={{ padding: '12px 24px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Plus size={20} /> Add Patient
+            <button onClick={() => navigate('/register')} style={{ padding: '12px 24px', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: 'white', border: 'none', borderRadius: '100px', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 10px 20px rgba(59, 130, 246, 0.2)' }}>
+              <Plus size={18} /> Add Patient
             </button>
          </div>
       </div>
       
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead>
-          <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-            <th style={{ padding: '16px 32px', color: '#64748B', fontWeight: 600, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Patient ID</th>
-            <th style={{ padding: '16px 32px', color: '#64748B', fontWeight: 600, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
-            <th style={{ padding: '16px 32px', color: '#64748B', fontWeight: 600, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Clinical Tier</th>
-            <th style={{ padding: '16px 32px', color: '#64748B', fontWeight: 600, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Primary Clinic</th>
-            <th style={{ padding: '16px 32px', color: '#64748B', fontWeight: 600, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map((p, i) => (
-            <tr key={p.id} style={{ borderBottom: i === patients.length - 1 ? 'none' : '1px solid #E2E8F0' }}>
-              <td style={{ padding: '24px 32px', fontSize: '1.1rem', color: '#0F172A', fontFamily: 'monospace' }}>{p.code}</td>
-              <td style={{ padding: '24px 32px' }}>
-                 <div style={{ fontWeight: 500, color: '#0F172A', fontSize: '1.1rem' }}>{p.name}</div>
-                 <div style={{ color: '#64748B', fontSize: '0.95rem', marginTop: '6px' }}>Parent: {p.parent}</div>
-              </td>
-              <td style={{ padding: '24px 32px' }}>
-                <span style={{ display: 'inline-block', padding: '6px 12px', borderRadius: '6px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.9rem', fontWeight: 600 }}>
-                  {p.level}
-                </span>
-              </td>
-              <td style={{ padding: '24px 32px', fontSize: '1.1rem', color: '#475569' }}>{p.hospital}</td>
-              <td style={{ padding: '24px 32px', textAlign: 'right' }}>
-                 <button onClick={() => navigate('/report')} style={{ background: 'none', border: 'none', color: '#3B82F6', cursor: 'pointer', fontWeight: 500, fontSize: '1.1rem', textDecoration: 'underline' }}>View Profile</button>
-              </td>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ background: '#F8FAFC', borderBottom: '1.5px solid #F1F5F9' }}>
+              <th style={{ padding: '18px 36px', color: '#475569', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Patient ID</th>
+              <th style={{ padding: '18px 36px', color: '#475569', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
+              <th style={{ padding: '18px 36px', color: '#475569', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Clinical Tier</th>
+              <th style={{ padding: '18px 36px', color: '#475569', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Primary Clinic</th>
+              <th style={{ padding: '18px 36px', color: '#475569', fontWeight: 800, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {patients.map((p, i) => {
+              const getBadgeStyle = (lvl) => {
+                if (lvl.includes('L1')) return { bg: '#D1FAE5', text: '#065F46', indicator: '#10B981' };
+                if (lvl.includes('L2')) return { bg: '#FEF3C7', text: '#92400E', indicator: '#F59E0B' };
+                return { bg: '#FEE2E2', text: '#991B1B', indicator: '#EF4444' };
+              };
+              const badge = getBadgeStyle(p.level);
+
+              return (
+                <tr key={p.id} style={{ borderBottom: i === patients.length - 1 ? 'none' : '1px solid #F1F5F9', transition: 'background 0.2s' }}>
+                  <td style={{ padding: '20px 36px' }}>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '0.9rem', color: '#475569', background: '#F1F5F9', padding: '6px 12px', borderRadius: '8px' }}>
+                      {p.code}
+                    </span>
+                  </td>
+                  <td style={{ padding: '20px 36px' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: badge.bg, color: badge.indicator, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem' }}>
+                          {p.name.charAt(0)}
+                        </div>
+                        <div>
+                           <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '1.05rem' }}>{p.name}</div>
+                           <div style={{ color: '#94A3B8', fontSize: '0.85rem', fontWeight: 650, marginTop: '2px' }}>Parent: {p.parent}</div>
+                        </div>
+                     </div>
+                  </td>
+                  <td style={{ padding: '20px 36px' }}>
+                    <span style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 14px', 
+                      borderRadius: '100px', 
+                      background: badge.bg, 
+                      color: badge.text, 
+                      fontSize: '0.85rem', 
+                      fontWeight: 800 
+                    }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: badge.indicator }}></span>
+                      {p.level}
+                    </span>
+                  </td>
+                  <td style={{ padding: '20px 36px', fontSize: '1rem', color: '#475569', fontWeight: 650 }}>{p.hospital}</td>
+                  <td style={{ padding: '20px 36px', textAlign: 'right' }}>
+                     <button onClick={() => navigate('/report')} className="btn-pop" style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '100px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)' }}>
+                       View Profile
+                     </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
@@ -288,47 +323,6 @@ function AdminDashboard() {
     </div>
   );
 
-  const renderSettings = () => (
-    <div className="animate-fade-in" style={{ maxWidth: '900px' }}>
-       <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-          <div style={{ padding: '32px', borderBottom: '1px solid #E2E8F0' }}>
-             <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#0F172A', margin: '0 0 8px 0' }}>System Architecture</h2>
-             <p style={{ color: '#64748B', fontSize: '1rem', margin: 0 }}>Configure platform-wide security and operational protocols.</p>
-          </div>
-          
-          <div style={{ padding: '32px' }}>
-             <h4 style={{ fontWeight: 600, fontSize: '1.1rem', margin: '0 0 20px 0', color: '#0F172A' }}>Security Controls</h4>
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0', borderBottom: '1px solid #F1F5F9' }}>
-                <div>
-                  <span style={{ fontWeight: 500, fontSize: '1.1rem', color: '#0F172A', display: 'block' }}>End-to-End Clinical Encryption</span>
-                  <span style={{ color: '#64748B', fontSize: '0.95rem', display: 'block', marginTop: '4px' }}>Encrypt all patient logs in transit and at rest.</span>
-                </div>
-                <div style={{ width: '48px', height: '28px', background: '#10B981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
-                   <div style={{ position: 'absolute', right: '3px', top: '3px', width: '22px', height: '22px', background: 'white', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}></div>
-                </div>
-             </div>
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0' }}>
-                <div>
-                  <span style={{ fontWeight: 500, fontSize: '1.1rem', color: '#0F172A', display: 'block' }}>Multi-Factor HQ Auth</span>
-                  <span style={{ color: '#64748B', fontSize: '0.95rem', display: 'block', marginTop: '4px' }}>Require 2FA for all administrator accounts.</span>
-                </div>
-                <div style={{ width: '48px', height: '28px', background: '#10B981', borderRadius: '14px', position: 'relative', cursor: 'pointer' }}>
-                   <div style={{ position: 'absolute', right: '3px', top: '3px', width: '22px', height: '22px', background: 'white', borderRadius: '50%', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}></div>
-                </div>
-             </div>
-
-             <div style={{ marginTop: '48px', background: '#FEF2F2', border: '1px solid #FECACA', padding: '24px', borderRadius: '8px' }}>
-                <h4 style={{ fontWeight: 600, fontSize: '1.1rem', margin: '0 0 10px 0', color: '#B91C1C' }}>Deep System Audit</h4>
-                <p style={{ color: '#991B1B', fontSize: '1rem', margin: '0 0 20px 0' }}>Initiate a comprehensive clinical and security audit. This process may slow down reporting nodes for up to 5 minutes.</p>
-                <button style={{ background: '#DC2626', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, cursor: 'pointer' }}>
-                   Run Diagnostics
-                </button>
-             </div>
-          </div>
-       </div>
-    </div>
-  );
-
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       
@@ -366,8 +360,7 @@ function AdminDashboard() {
 
           <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '32px', marginBottom: '12px', paddingLeft: '12px' }}>System</div>
           {[
-            { id: 'analytics', icon: BarChart3, label: 'Analytics' },
-            { id: 'settings', icon: Settings, label: 'Architecture' }
+            { id: 'analytics', icon: BarChart3, label: 'Analytics' }
           ].map(tab => (
             <div 
               key={tab.id} 
@@ -412,7 +405,6 @@ function AdminDashboard() {
                  {currentTab === 'doctors' && 'Clinical Team'}
                  {currentTab === 'schemes' && 'Government Schemes'}
                  {currentTab === 'analytics' && 'Analytics'}
-                 {currentTab === 'settings' && 'Architecture'}
               </h2>
            </div>
            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -439,7 +431,6 @@ function AdminDashboard() {
           {currentTab === 'doctors' && renderDoctors()}
           {currentTab === 'schemes' && renderSchemes()}
           {currentTab === 'analytics' && renderAnalytics()}
-          {currentTab === 'settings' && renderSettings()}
         </div>
       </main>
     </div>

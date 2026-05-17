@@ -60,7 +60,7 @@ function ClinicalReport() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <div style={{ background: 'var(--p-500)', padding: '8px', borderRadius: '10px' }}><Heart size={24} color="white" fill="white" /></div>
-              <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--slate-900)', letterSpacing: '-1px', margin: 0 }}>Autishta Care</h1>
+              <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--slate-900)', letterSpacing: '-1px', margin: 0 }}>AURA Care</h1>
             </div>
             <p style={{ color: '#64748B', fontWeight: 600 }}>Neuro-Clinical Digital Therapeutics Platform</p>
           </div>
@@ -90,7 +90,7 @@ function ClinicalReport() {
           </div>
           <div>
             <p className="report-label">Assessing System</p>
-            <p className="report-value">Autishta Clinical AI v4.2</p>
+            <p className="report-value">AURA Clinical AI v4.2</p>
           </div>
           <div>
             <p className="report-label">Status</p>

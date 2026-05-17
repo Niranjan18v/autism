@@ -241,12 +241,12 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    const saved = localStorage.getItem('autishta_language');
+    const saved = localStorage.getItem('aura_language');
     return saved || 'en';
   });
 
   useEffect(() => {
-    localStorage.setItem('autishta_language', language);
+    localStorage.setItem('aura_language', language);
   }, [language]);
 
   const toggleLanguage = () => {
