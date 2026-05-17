@@ -307,56 +307,57 @@ function EmotionMatching() {
         .btn-pop:hover { transform: translateY(-6px) scale(1.03); }
         .btn-pop:active { transform: scale(0.95); }
         
-        .journey-path { 
-          position: absolute; 
-          top: 0; 
-          bottom: 0; 
-          width: 24px; 
-          background: linear-gradient(180deg, #8B5CF6 0%, #10B981 33%, #F59E0B 66%, #F472B6 100%); 
-          left: 50%; 
-          transform: translateX(-50%); 
-          z-index: 0;
-          box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
-          border-radius: 50px;
+        @keyframes dash {
+          to {
+            stroke-dashoffset: -40;
+          }
+        }
+
+        @keyframes float-island {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(2deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
         }
 
         .journey-node { 
           z-index: 2; 
           position: relative; 
           background: white;
-          border-radius: 60px;
-          padding: 8px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          border-radius: 50%;
+          padding: 10px;
+          box-shadow: 0 15px 35px rgba(0,0,0,0.06);
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          animation: float-island 6s ease-in-out infinite;
         }
 
         .journey-node:hover {
           transform: scale(1.1) rotate(2deg);
-          box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+          box-shadow: 0 25px 45px rgba(0,0,0,0.12);
         }
 
         .node-inner {
-          width: 180px;
-          height: 180px;
-          border-radius: 52px;
+          width: 130px;
+          height: 130px;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           background: var(--slate-50);
+          border: 4px solid var(--slate-100);
         }
 
         .node-label {
           position: absolute;
-          bottom: -70px;
+          bottom: -55px;
           left: 50%;
           transform: translateX(-50%);
           background: white;
-          padding: 12px 32px;
+          padding: 8px 24px;
           border-radius: 100px;
-          font-weight: 900;
-          font-size: 1.2rem;
+          font-weight: 800;
+          font-size: 1rem;
           color: var(--slate-900);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+          box-shadow: 0 8px 16px rgba(0,0,0,0.04);
           white-space: nowrap;
           border: 2px solid var(--slate-100);
         }
@@ -388,26 +389,82 @@ function EmotionMatching() {
 
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 64px 150px' }}>
         {showMap ? (
-          <div className="animate-slide-up" style={{ width: '100%', maxWidth: '1100px', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '5.5rem', fontWeight: 900, color: 'var(--slate-900)', marginBottom: '100px', letterSpacing: '-3px' }}>The Emotion Journey 🌈</h1>
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '120px', alignItems: 'center' }}>
-              <div className="journey-path"></div>
+          <div className="animate-slide-up" style={{ width: '100%', maxWidth: '1200px', textAlign: 'center', position: 'relative' }}>
+            <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: 'var(--slate-900)', marginBottom: '80px', letterSpacing: '-2px' }}>
+              The Emotion Journey <span style={{ animation: 'bounce 2s infinite', display: 'inline-block' }}>🌈</span>
+            </h1>
+            
+            <div style={{ position: 'relative', minHeight: '1100px', display: 'flex', flexDirection: 'column', padding: '100px 0' }}>
+              
+              {/* Dynamic Winding SVG Path */}
+              <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} viewBox="0 0 1000 1100" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#F59E0B" />
+                    <stop offset="20%" stopColor="#10B981" />
+                    <stop offset="40%" stopColor="#38BDF8" />
+                    <stop offset="60%" stopColor="#F472B6" />
+                    <stop offset="80%" stopColor="#10B981" />
+                    <stop offset="100%" stopColor="#8B5CF6" />
+                  </linearGradient>
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="6" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <path 
+                  d="M 250,100 C 600,100 600,280 750,280 C 600,280 600,460 250,460 C 600,460 600,640 750,640 C 600,640 600,820 250,820 C 600,820 600,1000 750,1000" 
+                  fill="none" 
+                  stroke="url(#pathGradient)" 
+                  strokeWidth="14" 
+                  strokeLinecap="round"
+                  strokeDasharray="20, 12"
+                  filter="url(#glow)"
+                  style={{ animation: 'dash 20s linear infinite' }}
+                />
+              </svg>
+
+              {/* Animated Floating Clouds & Stars */}
+              <div style={{ position: 'absolute', top: '10%', left: '5%', fontSize: '3rem', animation: 'float-slow 6s infinite', opacity: 0.6 }}>☁️</div>
+              <div style={{ position: 'absolute', top: '40%', right: '8%', fontSize: '4rem', animation: 'float-slow 8s infinite', opacity: 0.5 }}>✨</div>
+              <div style={{ position: 'absolute', top: '70%', left: '10%', fontSize: '3rem', animation: 'float-slow 7s infinite', opacity: 0.6 }}>☁️</div>
+              <div style={{ position: 'absolute', top: '85%', right: '12%', fontSize: '3.5rem', animation: 'float-slow 5s infinite', opacity: 0.7 }}>🌟</div>
+
               {[
-                { id: 0, name: 'Meet Emotions', icon: Play, color: '#F59E0B' },
-                { id: 1, name: 'Discovery', icon: Sparkles, color: '#10B981' },
-                { id: 2, name: 'Modeling', icon: Play, color: '#38BDF8' },
-                { id: 3, name: 'Story Time', icon: BookOpen, color: '#F472B6' },
-                { id: 4, name: 'Zones', icon: MapIcon, color: '#10B981' },
-                { id: 5, name: 'AI Mirror Match', icon: Award, color: '#8B5CF6' }
+                { id: 0, name: 'Meet Emotions', icon: Play, color: '#F59E0B', x: '25%', y: '100px' },
+                { id: 1, name: 'Discovery', icon: Sparkles, color: '#10B981', x: '75%', y: '280px' },
+                { id: 2, name: 'Modeling', icon: Play, color: '#38BDF8', x: '25%', y: '460px' },
+                { id: 3, name: 'Story Time', icon: BookOpen, color: '#F472B6', x: '75%', y: '640px' },
+                { id: 4, name: 'Zones', icon: MapIcon, color: '#10B981', x: '25%', y: '820px' },
+                { id: 5, name: 'AI Mirror Match', icon: Award, color: '#8B5CF6', x: '75%', y: '1000px' }
               ].map((s, i) => (
-                <div key={i} className="journey-node" style={{ transform: `translateX(${i % 2 === 0 ? '-260px' : '260px'})` }}>
-                  <button onClick={() => startStage(s.id)} className="node-inner btn-pop">
-                    <s.icon size={90} color={s.color} fill={stickers.includes(["🎬", "🐻", "🦁", "🐼", "🦊", "🐯"][s.id]) ? s.color : 'none'} strokeWidth={2.5} />
-                    {stickers.includes(["🎬", "🐻", "🦁", "🐼", "🦊", "🐯"][s.id]) && (
-                      <div style={{ position: 'absolute', top: -15, right: -15, background: 'var(--s-500)', color: 'white', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '6px solid white', fontSize: '1.5rem', fontWeight: 900 }}>✓</div>
-                    )}
-                  </button>
-                  <div className="node-label">STAGE {s.id}: {s.name}</div>
+                <div 
+                  key={i} 
+                  style={{ 
+                    position: 'absolute', 
+                    left: s.x, 
+                    top: s.y, 
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 2,
+                    animationDelay: `${i * 0.5}s`
+                  }}
+                >
+                  <div className="journey-node" style={{ border: `4px solid ${s.color}`, animationDelay: `${i * 0.6}s` }}>
+                    <button 
+                      onClick={() => startStage(s.id)} 
+                      className="node-inner btn-pop" 
+                      style={{ background: `${s.color}08` }}
+                    >
+                      <s.icon size={70} color={s.color} fill={stickers.includes(["🎬", "🐻", "🦁", "🐼", "🦊", "🐯"][s.id]) ? s.color : 'none'} strokeWidth={2.5} />
+                      {stickers.includes(["🎬", "🐻", "🦁", "🐼", "🦊", "🐯"][s.id]) && (
+                        <div style={{ position: 'absolute', top: -10, right: -10, background: '#10B981', color: 'white', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid white', fontSize: '1.1rem', fontWeight: 900, boxShadow: '0 8px 16px rgba(16,185,129,0.3)' }}>✓</div>
+                      )}
+                    </button>
+                    <div className="node-label" style={{ borderTop: `4px solid ${s.color}` }}>
+                      <span style={{ fontSize: '0.75rem', color: s.color, fontWeight: 800, display: 'block', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>Stage {s.id}</span>
+                      {s.name}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
