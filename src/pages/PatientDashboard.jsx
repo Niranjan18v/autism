@@ -636,24 +636,24 @@ const PatientDashboard = () => {
               </div>
 
               {/* Habit grid logs */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                 {behaviorLogs.map(log => (
                   <div 
                     key={log.id} 
                     onClick={() => toggleBehavior(log.id)} 
                     className="btn-pop"
                     style={{ 
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 24px', borderRadius: '16px', 
+                      display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 20px', borderRadius: '12px', 
                       background: log.done ? '#ECFDF5' : '#F8FAFC', 
                       border: log.done ? '2px solid #34D399' : '2px solid #E2E8F0', 
                       cursor: 'pointer', transition: 'all 0.2s', 
                       boxShadow: log.done ? '0 6px 16px rgba(52, 211, 153, 0.12)' : 'none'
                     }}
                   >
-                    <span style={{ fontWeight: 800, fontSize: '1.05rem', color: log.done ? '#065F46' : '#475569' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.95rem', color: log.done ? '#065F46' : '#475569' }}>
                       {language === 'en' ? log.text : log.ta}
                     </span>
-                    {log.done && <span style={{ color: '#10B981', fontWeight: 900, fontSize: '1.2rem', marginLeft: '6px' }}>✓</span>}
+                    {log.done && <span style={{ color: '#10B981', fontWeight: 900, fontSize: '1.1rem', marginLeft: '4px' }}>✓</span>}
                   </div>
                 ))}
               </div>
@@ -977,7 +977,7 @@ const PatientDashboard = () => {
                 </div>
 
                 {/* Choice Buttons */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', width: '100%' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%' }}>
                   {shapeChoices.map((choice, idx) => (
                     <button 
                       key={idx}
@@ -986,19 +986,19 @@ const PatientDashboard = () => {
                       style={{
                         background: 'white',
                         border: '2px solid #E2E8F0',
-                        borderRadius: '20px',
-                        padding: '24px',
+                        borderRadius: '16px',
+                        padding: '16px',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '8px',
+                        gap: '6px',
                         boxShadow: '0 6px 16px rgba(0,0,0,0.02)',
                         transition: 'all 0.2s'
                       }}
                     >
-                      <span style={{ fontSize: '3rem' }}>{choice.emoji}</span>
-                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E293B' }}>{choice.label}</span>
+                      <span style={{ fontSize: '2.2rem' }}>{choice.emoji}</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E293B' }}>{choice.label}</span>
                     </button>
                   ))}
                 </div>
@@ -1017,7 +1017,7 @@ const PatientDashboard = () => {
                 <div style={{ 
                   display: 'grid', 
                   gridTemplateColumns: calmSettings.level === 'beginner' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', 
-                  gap: '20px', 
+                  gap: '14px', 
                   width: '100%' 
                 }}>
                   {memoryCards.map((card, idx) => (
@@ -1026,22 +1026,22 @@ const PatientDashboard = () => {
                       onClick={() => handleMemoryFlip(idx)}
                       className="btn-pop"
                       style={{
-                        height: '140px',
+                        height: '100px',
                         background: card.matched ? '#ECFDF5' : card.flipped ? '#F8FAFC' : 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
                         border: card.matched ? '3px solid #10B981' : card.flipped ? '3px solid #3B82F6' : '3px solid white',
-                        borderRadius: '24px',
+                        borderRadius: '18px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: card.matched ? 'default' : 'pointer',
-                        boxShadow: '0 10px 20px rgba(0,0,0,0.05)',
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
                         transition: 'all 0.3s transform'
                       }}
                     >
                       {(card.flipped || card.matched) ? (
-                        <span style={{ fontSize: '3.5rem' }}>{card.icon}</span>
+                        <span style={{ fontSize: '2.2rem' }}>{card.icon}</span>
                       ) : (
-                        <Star size={40} color="white" fill="white" style={{ opacity: 0.7 }} />
+                        <Star size={30} color="white" fill="white" style={{ opacity: 0.7 }} />
                       )}
                     </div>
                   ))}
@@ -1051,26 +1051,26 @@ const PatientDashboard = () => {
 
             {/* Game 3: Healthy Food Sorter */}
             {activeGame === 'sort_food' && foodItem && (
-              <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '36px' }}>
+              <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
                 <div>
-                  <p style={{ color: '#9D174D', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 16px' }}>
+                  <p style={{ color: '#9D174D', fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 10px' }}>
                     {language === 'en' ? 'CLASSIFY THIS FOOD ITEM' : 'இந்த உணவை வகைப்படுத்துங்கள்'}
                   </p>
                   
-                  <div style={{ background: '#FFF5F5', border: '2px solid #FECDD3', padding: '32px', borderRadius: '32px', display: 'inline-block', minWidth: '240px', boxShadow: '0 10px 20px rgba(244,114,182,0.05)' }}>
-                    <span style={{ fontSize: '7rem', lineHeight: 1 }}>{foodItem.name.split(' ')[0]}</span>
-                    <h2 style={{ fontSize: '2.2rem', fontWeight: 900, color: '#4C0519', margin: '16px 0 0' }}>{foodItem.name.split(' ').slice(1).join(' ')}</h2>
+                  <div style={{ background: '#FFF5F5', border: '2px solid #FECDD3', padding: '20px', borderRadius: '24px', display: 'inline-block', minWidth: '180px', boxShadow: '0 10px 20px rgba(244,114,182,0.05)' }}>
+                    <span style={{ fontSize: '4.5rem', lineHeight: 1 }}>{foodItem.name.split(' ')[0]}</span>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#4C0519', margin: '8px 0 0' }}>{foodItem.name.split(' ').slice(1).join(' ')}</h2>
                   </div>
                 </div>
 
                 {/* Score Indicator */}
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
                   {[...Array(calmSettings.level === 'beginner' ? 3 : calmSettings.level === 'medium' ? 5 : 7)].map((_, idx) => (
                     <div 
                       key={idx} 
                       style={{ 
-                        width: '20px', 
-                        height: '20px', 
+                        width: '16px', 
+                        height: '16px', 
                         borderRadius: '50%', 
                         background: idx < sortScore ? '#F472B6' : '#E2E8F0',
                         border: idx < sortScore ? '2px solid #DB2777' : '2px solid #CBD5E1',
@@ -1081,17 +1081,17 @@ const PatientDashboard = () => {
                 </div>
 
                 {/* Targets */}
-                <div style={{ display: 'flex', gap: '24px', width: '100%' }}>
+                <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
                   <button 
                     onClick={() => handleSortFood(true)}
                     className="btn-pop animate-pulse"
                     style={{
                       flex: 1,
                       background: '#ECFDF5',
-                      border: '3px solid #10B981',
-                      borderRadius: '24px',
-                      padding: '24px',
-                      fontSize: '1.25rem',
+                      border: '2.5px solid #10B981',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      fontSize: '1rem',
                       fontWeight: 900,
                       color: '#065F46',
                       cursor: 'pointer',
@@ -1107,10 +1107,10 @@ const PatientDashboard = () => {
                     style={{
                       flex: 1,
                       background: '#FFF7ED',
-                      border: '3px solid #F97316',
-                      borderRadius: '24px',
-                      padding: '24px',
-                      fontSize: '1.25rem',
+                      border: '2.5px solid #F97316',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      fontSize: '1rem',
                       fontWeight: 900,
                       color: '#9A3412',
                       cursor: 'pointer',
@@ -1125,51 +1125,52 @@ const PatientDashboard = () => {
 
             {/* Game 4: Morning Routine Sequence */}
             {activeGame === 'sequence_routine' && (
-              <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
+              <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ color: '#075985', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 6px' }}>
+                  <p style={{ color: '#075985', fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 6px' }}>
                     {language === 'en' ? 'ORDER ROUTINE CARDS FROM FIRST TO LAST' : 'காலை வழக்க அட்டைகளை வரிசைப்படுத்தவும்!'}
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
                   {routineCards.map((card, idx) => (
                     <div 
                       key={card.step}
                       style={{
                         background: 'white',
                         border: '2px solid #E2E8F0',
-                        borderRadius: '20px',
-                        padding: '18px 28px',
+                        borderRadius: '16px',
+                        padding: '12px 20px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         boxShadow: '0 6px 12px rgba(0,0,0,0.02)'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '40px', height: '40px', background: `${card.color}15`, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, fontWeight: 900, fontSize: '1.2rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '32px', height: '32px', background: `${card.color}15`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, fontWeight: 900, fontSize: '1.05rem' }}>
                           {idx + 1}
                         </div>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E293B' }}>{card.text}</span>
+                        <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E293B' }}>{card.text}</span>
                       </div>
 
                       {/* Direction Shift Controls */}
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '6px' }}>
                         <button 
                           disabled={idx === 0}
                           onClick={() => handleMoveRoutineCard(idx, idx - 1)}
                           style={{
                             background: '#F1F5F9',
                             border: 'none',
-                            width: '40px',
-                            height: '40px',
+                            width: '32px',
+                            height: '32px',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: idx === 0 ? 'default' : 'pointer',
-                            opacity: idx === 0 ? 0.3 : 1
+                            opacity: idx === 0 ? 0.3 : 1,
+                            fontSize: '0.8rem'
                           }}
                         >
                           ▲
@@ -1181,14 +1182,15 @@ const PatientDashboard = () => {
                           style={{
                             background: '#F1F5F9',
                             border: 'none',
-                            width: '40px',
-                            height: '40px',
+                            width: '32px',
+                            height: '32px',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: idx === routineCards.length - 1 ? 'default' : 'pointer',
-                            opacity: idx === routineCards.length - 1 ? 0.3 : 1
+                            opacity: idx === routineCards.length - 1 ? 0.3 : 1,
+                            fontSize: '0.8rem'
                           }}
                         >
                           ▼
@@ -1259,7 +1261,7 @@ const PatientDashboard = () => {
                  </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {plannerTasks.map(task => {
                   const colors = getCategoryColors(task.category);
                   return (
@@ -1267,13 +1269,13 @@ const PatientDashboard = () => {
                       key={task.id} 
                       className="bento-card btn-pop" 
                       style={{ 
-                        padding: '24px 32px', 
+                        padding: '16px 24px', 
                         background: task.done ? '#ECFDF5' : 'white', 
                         display: 'flex', 
                         alignItems: 'center', 
-                        gap: '24px', 
-                        border: task.done ? '2.5px solid #10B981' : '2.5px solid #E2E8F0', 
-                        borderRadius: '20px',
+                        gap: '16px', 
+                        border: task.done ? '2px solid #10B981' : '2px solid #E2E8F0', 
+                        borderRadius: '16px',
                         boxShadow: task.done ? '0 10px 24px rgba(16, 185, 129, 0.05)' : 'none',
                         transition: 'all 0.2s ease'
                       }}
@@ -1283,16 +1285,16 @@ const PatientDashboard = () => {
                        </div>
                        
                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '6px' }}>
-                             <span style={{ color: 'var(--slate-400)', fontWeight: 800, fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                               <Clock size={16} /> {task.time}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                             <span style={{ color: 'var(--slate-400)', fontWeight: 800, fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                               <Clock size={14} /> {task.time}
                              </span>
-                             <span style={{ background: colors.bg, color: colors.color, padding: '4px 12px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                             <span style={{ background: colors.bg, color: colors.color, padding: '2px 10px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                {task.category}
                              </span>
                           </div>
                           <h4 style={{ 
-                            fontSize: '1.25rem', 
+                            fontSize: '1.05rem', 
                             fontWeight: 850, 
                             margin: 0, 
                             textDecoration: task.done ? 'line-through' : 'none', 
@@ -1311,20 +1313,20 @@ const PatientDashboard = () => {
                            color: 'white',
                            border: 'none',
                            borderRadius: '100px',
-                           padding: '12px 28px', 
-                           fontSize: '0.9rem',
+                           padding: '10px 20px', 
+                           fontSize: '0.8rem',
                            fontWeight: 900,
                            cursor: 'pointer',
                            display: 'inline-flex',
                            alignItems: 'center',
-                           gap: '8px',
+                           gap: '6px',
                            boxShadow: task.done ? 'none' : '0 6px 16px rgba(15,23,42,0.15)',
                            transition: 'all 0.2s ease'
                          }}
                        >
                           {task.done ? (
                             <>
-                              <CheckCircle size={16} strokeWidth={3} /> 
+                              <CheckCircle size={14} strokeWidth={3} /> 
                               <span>{language === 'en' ? 'COMPLETED' : 'முடிந்தது'}</span>
                             </>
                           ) : (
