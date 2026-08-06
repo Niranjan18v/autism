@@ -681,8 +681,8 @@ const PatientDashboard = () => {
                 </h4>
                 <p style={{ margin: '10px 0 0', fontSize: '1.05rem', opacity: 0.95, lineHeight: 1.5, fontWeight: 600 }}>
                   {language === 'en' 
-                    ? "Hey Arjun! Pop some bubbles in the Fun Games section today to unlock your daily Super Badge! Let's grow together!"
-                    : "ஹே அர்ஜுன்! இன்று இரட்டை நட்சத்திர வெகுமதியைப் பெற சென்சரி குமிழ்களை பாப் செய்யுங்கள்! ஒன்றாக வளர்வோம்!"}
+                    ? "Hey Arjun! Complete your Daily Missions today to unlock your daily Super Badge! Let's grow together!"
+                    : "ஹே அர்ஜுன்! இன்று இரட்டை நட்சத்திர வெகுமதியைப் பெற தினசரி பணிகளை முடியுங்கள்! ஒன்றாக வளர்வோம்!"}
                 </p>
               </div>
 
@@ -1780,14 +1780,12 @@ const PatientDashboard = () => {
           {(language === 'en' ? [
             { id: 'dashboard', icon: LayoutDashboard, label: 'My Home' },
             { id: 'planner', icon: Calendar, label: 'Daily Missions' },
-            { id: 'games', icon: Gamepad2, label: 'Fun Games' },
             { id: 'schemes', icon: ShieldCheck, label: 'Govt Schemes' },
             { id: 'chat', icon: MessageCircle, label: 'Doctor Chat' },
             { id: 'profile', icon: User, label: 'My Profile' }
           ] : [
             { id: 'dashboard', icon: LayoutDashboard, label: 'என் வீடு' },
             { id: 'planner', icon: Calendar, label: 'தினசரி பணிகள்' },
-            { id: 'games', icon: Gamepad2, label: 'விளையாட்டு உலகம்' },
             { id: 'schemes', icon: ShieldCheck, label: 'அரசு திட்டங்கள்' },
             { id: 'chat', icon: MessageCircle, label: 'மருத்துவர் அரட்டை' },
             { id: 'profile', icon: User, label: 'எனது சுயவிவரம்' }
@@ -1833,7 +1831,6 @@ const PatientDashboard = () => {
             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.3px' }}>
               {currentTab === 'dashboard' && (language === 'en' ? 'Welcome, Arjun!' : 'வரவேற்கிறோம், அர்ஜுன்!')}
               {currentTab === 'planner' && (language === 'en' ? 'Daily Growth Missions' : 'தினசரி வளர்ச்சிப் பணிகள்')}
-              {currentTab === 'games' && (language === 'en' ? 'Skills Universe' : 'திறன் விளையாட்டு உலகம்')}
               {currentTab === 'schemes' && (language === 'en' ? 'Government Support Schemes' : 'அரசு நலத்திட்டங்கள்')}
               {currentTab === 'chat' && (language === 'en' ? 'Doctor Consult' : 'மருத்துவர் அரட்டை')}
               {currentTab === 'profile' && (language === 'en' ? 'Super Hero Profile' : 'சுயவிவரம்')}
@@ -1853,7 +1850,6 @@ const PatientDashboard = () => {
         <div style={{ padding: '32px', flex: 1 }}>
           {currentTab === 'dashboard' && renderDashboard()}
           {currentTab === 'planner' && renderPlanner()}
-          {currentTab === 'games' && renderGames()}
           {currentTab === 'schemes' && renderSchemes()}
           {currentTab === 'profile' && renderProfile()}
           {currentTab === 'chat' && renderChat()}
