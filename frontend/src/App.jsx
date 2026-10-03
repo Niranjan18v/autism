@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import PatientDashboard from './pages/PatientDashboard'
@@ -8,7 +8,8 @@ import EmotionMatching from './pages/EmotionMatching'
 import CommunicationModule from './pages/CommunicationModule'
 import EducationModule from './pages/EducationModule'
 import Assessment from './pages/Assessment'
-import Register from './pages/Register'
+import PatientRegister from './pages/PatientRegister'
+import DoctorRegister from './pages/DoctorRegister'
 import ClinicalReport from './pages/ClinicalReport'
 import './App.css'
 
@@ -25,7 +26,9 @@ function App() {
         <Route path="/activity/communication" element={<CommunicationModule />} />
         <Route path="/activity/education" element={<EducationModule />} />
         <Route path="/activity/assessment" element={<Assessment />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Navigate to="/register/patient" replace />} />
+        <Route path="/register/patient" element={<PatientRegister />} />
+        <Route path="/register/doctor" element={<DoctorRegister />} />
         <Route path="/report" element={<ClinicalReport />} />
       </Routes>
     </Router>

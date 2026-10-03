@@ -2,13 +2,49 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, Smile, MessageCircle, Gamepad2, Award, Star, Rocket, Sparkles, Bot,
-  User, ClipboardList, CheckCircle, Video, Play, Phone, ArrowLeft, X, Check, Trophy, MousePointer2, RefreshCcw, ImageIcon, LayoutDashboard, Settings, LogOut, ChevronRight, Calendar, ShieldCheck, Heart, Clock
+  User, ClipboardList, CheckCircle, Video, Play, Phone, ArrowLeft, X, Check, Trophy, MousePointer2, RefreshCcw, ImageIcon, LayoutDashboard, Settings, LogOut, ChevronRight, Calendar, ShieldCheck, Heart, Clock, Sun, Pause, Palette, Flame, Brain, HeartPulse, Menu, Building, Mail
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import PatientChatTab from '../components/PatientChatTab';
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
+
+  // ── Auth guard & user profile ──────────────────────────────
+  const [user, setUser] = React.useState(null);
+  const [patientProfile, setPatientProfile] = React.useState(null);
+
+  React.useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (!stored) {
+      navigate('/login');
+      return;
+    }
+    const parsed = JSON.parse(stored);
+    if (parsed.role !== 'patient') {
+      navigate('/login');
+      return;
+    }
+    setUser(parsed);
+
+    // Fetch full patient profile from MongoDB
+    fetch(`/api/patient/profile/${parsed._id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.message) {
+          setPatientProfile(data);
+        }
+      })
+      .catch(err => console.error('Error loading patient profile:', err));
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+  // ----------------------------------------------------
+
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [sparkles, setSparkles] = useState([]);
   const [starsEarned, setStarsEarned] = useState(120);
@@ -20,6 +56,7 @@ const PatientDashboard = () => {
   const [activeGame, setActiveGame] = useState(null);
   const [gameScore, setGameScore] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Game Specific State
   const [bubbles, setBubbles] = useState([]);
@@ -57,10 +94,10 @@ const PatientDashboard = () => {
   const jigsawShape = "polygon(0% 20%, 40% 20%, 40% 0%, 60% 0%, 60% 20%, 100% 20%, 100% 40%, 120% 40%, 120% 60%, 100% 60%, 100% 100%, 60% 100%, 60% 120%, 40% 120%, 40% 100%, 0% 100%, 0% 60%, -20% 60%, -20% 40%, 0% 40%)";
 
   const [behaviorLogs, setBehaviorLogs] = useState([
-    { id: 1, text: 'Slept Well', ta: 'நன்றாக உறங்கினார்', done: false, icon: '' },
-    { id: 2, text: 'Ate Healthy Food', ta: 'சத்தான உணவு உண்டார்', done: false, icon: '' },
-    { id: 3, text: 'Expressed Emotions', ta: 'உணர்ச்சிகளை வெளிப்படுத்தினார்', done: false, icon: '' },
-    { id: 4, text: 'Followed Routine', ta: 'வழக்கமான முறையைப் பின்பற்றினார்', done: false, icon: '' }
+    { id: 1, text: 'Slept Well', ta: 'நன்றாக தூங்கினார்', done: false, icon: '🌙' },
+    { id: 2, text: 'Ate Healthy Food', ta: 'சத்தான உணவு உண்டார்', done: false, icon: '🥗' },
+    { id: 3, text: 'Expressed Emotions', ta: 'உணர்ச்சிகளை வெளிப்படுத்தினார்', done: false, icon: '😊' },
+    { id: 4, text: 'Followed Routine', ta: 'வழக்கத்தை பின்பற்றினார்', done: false, icon: '⭐' },
   ]);
 
   const [chatInput, setChatInput] = useState('');
@@ -69,23 +106,125 @@ const PatientDashboard = () => {
   ]);
 
   const [plannerTasks, setPlannerTasks] = useState([
-    { id: 1, time: '09:00 AM', mission: 'Emotion Match', ta: 'உணர்ச்சி பொருத்தம்', category: 'Social', done: true, icon: '' },
-    { id: 2, time: '11:30 AM', mission: 'Alphabet Academy', ta: 'அகரவரிசை அகாடமி', category: 'Education', done: false, icon: '' },
-    { id: 3, time: '04:00 PM', mission: 'Sensory Bubble Pop', ta: 'சென்சரி குமிழி பாப்', category: 'Sensory', done: false, icon: '' },
-    { id: 4, time: '07:30 PM', mission: 'Voice Buddy AI', ta: 'வாய்ஸ் படி AI', category: 'Communication', done: false, icon: '' }
+    { id: 1, time: '09:00 AM', mission: 'Emotion Match', ta: 'உணர்ச்சி பொருத்தம்', category: 'Social', done: true, icon: '😊' },
+    { id: 2, time: '11:30 AM', mission: 'Alphabet Academy', ta: 'அகரவரிசை அகாடமி', category: 'Cognitive', done: true, icon: '📚' },
+    { id: 3, time: '04:00 PM', mission: 'Sensory Bubble Pop', ta: 'சென்சரி குமிழி பாப்', category: 'Sensory', done: false, icon: '🫧' },
+    { id: 4, time: '07:30 PM', mission: 'Voice Buddy AI', ta: 'வாய்ஸ் படி AI', category: 'Communication', done: false, icon: '🐼' }
   ]);
 
   const togglePlannerTask = (id) => {
-    setPlannerTasks(prev => prev.map(t => {
-      if (t.id === id) {
-        if (!t.done) {
-          setStarsEarned(s => s + 25);
-          setSparkles(p => [...p, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, color: 'var(--s-500)', size: 40 }]);
+    setPlannerTasks(prev => {
+      const newTasks = prev.map(t => {
+        if (t.id === id) {
+          if (!t.done) {
+            setStarsEarned(s => s + 25);
+            setSparkles(p => [...p, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, color: 'var(--s-500)', size: 40 }]);
+          }
+          return { ...t, done: !t.done };
         }
-        return { ...t, done: !t.done };
+        return t;
+      });
+      
+      const allRegularDone = newTasks.every(t => t.done);
+      setRewardUnlocked(allRegularDone);
+      
+      return newTasks;
+    });
+  };
+
+  // Planner Extra Features State
+  const [plannerMood, setPlannerMood] = useState(null);
+  const [rewardUnlocked, setRewardUnlocked] = useState(false);
+  const [rewardClaimed, setRewardClaimed] = useState(false);
+
+  const claimReward = () => {
+    if (!rewardUnlocked || rewardClaimed) return;
+    setRewardClaimed(true);
+    setStarsEarned(s => s + 100);
+    setSparkles(p => [...p, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, color: '#F59E0B', size: 80 }]);
+    speakText(language === 'en' ? 'Incredible! You unlocked the secret reward!' : 'அற்புதம்! நீங்கள் ரகசிய வெகுமதியைத் திறந்துவிட்டீர்கள்!');
+  };
+
+  // Extra Features State
+  const [activeJourneyStep, setActiveJourneyStep] = useState(0);
+  const [breathingPhase, setBreathingPhase] = useState('idle');
+  const [breatheScale, setBreatheScale] = useState(1);
+  const [scheduleItems, setScheduleItems] = useState([
+    { id: 1, time: '08:00 AM', title: language === 'en' ? 'Breakfast' : 'காலை உணவு', icon: '🥞', status: 'done' },
+    { id: 2, time: '10:00 AM', title: language === 'en' ? 'Smart Hero Academy' : 'ஸ்மார்ட் ஹீரோ அகாடமி', icon: '📚', status: 'current' },
+    { id: 3, time: '01:00 PM', title: language === 'en' ? 'Lunch & Rest' : 'மதிய உணவு மற்றும் ஓய்வு', icon: '🍲', status: 'upcoming' },
+    { id: 4, time: '04:00 PM', title: language === 'en' ? 'Sensory Play' : 'உணர்வு விளையாட்டு', icon: '🎨', status: 'upcoming' }
+  ]);
+
+  const startBreathingExercise = () => {
+    if (breathingPhase !== 'idle') return;
+    setBreathingPhase('inhale');
+    setBreatheScale(1.5);
+      speakText(language === 'en' ? 'Breathe in slowly...' : 'மெதுவாக மூச்சை உள்ளே இழுக்கவும்...');
+    
+    setTimeout(() => {
+      setBreathingPhase('hold');
+        speakText(language === 'en' ? 'Hold it...' : 'மூச்சை அடக்கி வைக்கவும்...');
+      
+      setTimeout(() => {
+        setBreathingPhase('exhale');
+        setBreatheScale(1);
+          speakText(language === 'en' ? 'Breathe out slowly...' : 'மெதுவாக மூச்சை வெளியே விடவும்...');
+        
+        setTimeout(() => {
+          setBreathingPhase('idle');
+          setStarsEarned(s => s + 15);
+          setSparkles(p => [...p, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, color: '#10B981', size: 40 }]);
+            speakText(language === 'en' ? 'Great job! You feel calmer.' : 'சிறப்பு! இப்போது நீங்கள் அமைதியாக உணர்கிறீர்கள்.');
+        }, 4000);
+      }, 2000);
+    }, 4000);
+  };
+
+  // Sidebar Widgets Logic
+  const [selectedOutfit, setSelectedOutfit] = useState(null);
+  const [breakTimeLeft, setBreakTimeLeft] = useState(300); // 5 mins in seconds
+  const [isBreakActive, setIsBreakActive] = useState(false);
+  const [tokens, setTokens] = useState(0);
+
+  useEffect(() => {
+    let interval = null;
+    if (isBreakActive && breakTimeLeft > 0) {
+      interval = setInterval(() => {
+        setBreakTimeLeft(t => t - 1);
+      }, 1000);
+    } else if (breakTimeLeft === 0 && isBreakActive) {
+      setIsBreakActive(false);
+        speakText(language === 'en' ? 'Break time is over! Ready to focus?' : 'ஓய்வு நேரம் முடிந்தது! கவனம் செலுத்தத் தயாரா?');
+      setSparkles(p => [...p, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, color: '#3B82F6', size: 60 }]);
+    }
+    return () => clearInterval(interval);
+  }, [isBreakActive, breakTimeLeft, language]);
+
+  const toggleBreakTimer = () => {
+    if (breakTimeLeft === 0) setBreakTimeLeft(300);
+    setIsBreakActive(!isBreakActive);
+  };
+  
+  const addToken = () => {
+    if (tokens < 5) {
+      setTokens(t => t + 1);
+    speakText(language === 'en' ? 'Great job! You earned a token!' : 'சிறப்பு! நீங்கள் ஒரு டோக்கனைப் பெற்றுள்ளீர்கள்!');
+      if (tokens === 4) {
+        setTimeout(() => {
+          setStarsEarned(s => s + 50);
+          setSparkles(p => [...p, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, color: '#F59E0B', size: 100 }]);
+      speakText(language === 'en' ? 'Incredible! You filled your token board!' : 'அற்புதம்! உங்கள் டோக்கன் போர்டு நிறைவடைந்தது!');
+          setTimeout(() => setTokens(0), 2500);
+        }, 1000);
       }
-      return t;
-    }));
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   // Game Loops
@@ -261,10 +400,10 @@ const PatientDashboard = () => {
 
     if (gameId === 'match_shape') {
       const shapes = [
-        { name: 'Circle', label: language === 'en' ? 'Circle' : 'வட்டம்', emoji: '🔴', color: '#EF4444' },
-        { name: 'Square', label: language === 'en' ? 'Square' : 'சதுரம்', emoji: '🟦', color: '#3B82F6' },
-        { name: 'Triangle', label: language === 'en' ? 'Triangle' : 'முக்கோணம்', emoji: '🔺', color: '#10B981' },
-        { name: 'Star', label: language === 'en' ? 'Star' : 'நட்சத்திரம்', emoji: '⭐', color: '#F59E0B' }
+    { name: 'Circle', label: language === 'en' ? 'Circle' : 'வட்டம்', emoji: '🔴', color: '#EF4444' },
+    { name: 'Square', label: language === 'en' ? 'Square' : 'சதுரம்', emoji: '🟦', color: '#3B82F6' },
+    { name: 'Triangle', label: language === 'en' ? 'Triangle' : 'முக்கோணம்', emoji: '🔺', color: '#10B981' },
+    { name: 'Star', label: language === 'en' ? 'Star' : 'நட்சத்திரம்', emoji: '⭐', color: '#F59E0B' }
       ];
       const target = shapes[Math.floor(Math.random() * shapes.length)];
       setShapeTarget(target);
@@ -272,12 +411,12 @@ const PatientDashboard = () => {
       
       // Gentle voice introduction
       setTimeout(() => {
-        speakText(language === 'en' ? `Find the matching shape: ${target.name}` : `பொருத்தமான வடிவம்: ${target.label}`);
+    speakText(language === 'en' ? `Find the matching shape: ${target.name}` : `பொருத்தமான வடிவம்: ${target.label}`);
       }, 100);
     }
 
     if (gameId === 'memory_pair') {
-      const icons = ['🐶', '🐱', '🐹', '🐻'];
+    const icons = ['🐶', '🐱', '🐹', '🐻'];
       const pairCount = calmSettings.level === 'beginner' ? 2 : calmSettings.level === 'medium' ? 3 : 4;
       const gameIcons = icons.slice(0, pairCount);
       const cardsData = [...gameIcons, ...gameIcons]
@@ -287,41 +426,41 @@ const PatientDashboard = () => {
       setFlippedCardIndices([]);
       
       setTimeout(() => {
-        speakText(language === 'en' ? 'Find all matching animal pairs!' : 'விலங்கு ஜோடிகளைக் கண்டுபிடி!');
+    speakText(language === 'en' ? 'Find all matching animal pairs!' : 'விலங்கு ஜோடிகளைக் கண்டுபிடி!');
       }, 100);
     }
 
     if (gameId === 'sort_food') {
       const foods = [
-        { name: language === 'en' ? '🥦 Broccoli' : '🥦 முட்டைக்கோஸ்', isHealthy: true },
-        { name: language === 'en' ? '🍎 Apple' : '🍎 ஆப்பிள்', isHealthy: true },
-        { name: language === 'en' ? '🍌 Banana' : '🍌 வாழைப்பழம்', isHealthy: true },
-        { name: language === 'en' ? '🥕 Carrot' : '🥕 கேரட்', isHealthy: true },
-        { name: language === 'en' ? '🍩 Donut' : '🍩 டோனட்', isHealthy: false },
-        { name: language === 'en' ? '🍕 Pizza' : '🍕 பீட்சா', isHealthy: false },
-        { name: language === 'en' ? '🍨 Ice Cream' : '🍨 ஐஸ்கிரீம்', isHealthy: false },
-        { name: language === 'en' ? '🍟 Fries' : '🍟 உருளைக்கிழங்கு வறுவல்', isHealthy: false }
+    { name: language === 'en' ? '🥦 Broccoli' : '🥦 ப்ரோக்கோலி', isHealthy: true },
+    { name: language === 'en' ? '🍎 Apple' : '🍎 ஆப்பிள்', isHealthy: true },
+    { name: language === 'en' ? '🍌 Banana' : '🍌 வாழைப்பழம்', isHealthy: true },
+    { name: language === 'en' ? '🥕 Carrot' : '🥕 கேரட்', isHealthy: true },
+    { name: language === 'en' ? '🍩 Donut' : '🍩 டோனட்', isHealthy: false },
+    { name: language === 'en' ? '🍕 Pizza' : '🍕 பீட்சா', isHealthy: false },
+    { name: language === 'en' ? '🍨 Ice Cream' : '🍨 ஐஸ்கிரீம்', isHealthy: false },
+    { name: language === 'en' ? '🍟 Fries' : '🍟 உருளைக்கிழங்கு வறுவல்', isHealthy: false }
       ];
       const selected = foods[Math.floor(Math.random() * foods.length)];
       setFoodItem(selected);
       setSortScore(0);
       
       setTimeout(() => {
-        speakText(language === 'en' ? `Classify: ${selected.name.split(' ').slice(1).join(' ')}` : `உணவை வகைப்படுத்துங்கள்: ${selected.name.split(' ').slice(1).join(' ')}`);
+    speakText(language === 'en' ? `Classify: ${selected.name.split(' ').slice(1).join(' ')}` : `உணவை வகைப்படுத்துங்கள்: ${selected.name.split(' ').slice(1).join(' ')}`);
       }, 100);
     }
 
     if (gameId === 'sequence_routine') {
       const steps = [
-        { step: 1, text: language === 'en' ? '🪥 Brush Teeth' : '🪥 பல் துலக்குங்கள்', color: '#38BDF8' },
-        { step: 2, text: language === 'en' ? '🍳 Eat Breakfast' : '🍳 காலை உணவு உண்ணுங்கள்', color: '#F472B6' },
-        { step: 3, text: language === 'en' ? '🎒 Pack School Bag' : '🎒 பள்ளிப் பையை தயார் செய்யுங்க', color: '#FBBF24' },
-        { step: 4, text: language === 'en' ? '🚌 Go to School' : '🚌 பள்ளிக்குச் செல்லுங்கள்', color: '#10B981' }
+    { step: 1, text: language === 'en' ? '🪥 Brush Teeth' : '🪥 பல் துலக்குங்கள்', color: '#38BDF8' },
+    { step: 2, text: language === 'en' ? '🍳 Eat Breakfast' : '🍳 காலை உணவு உண்ணுங்கள்', color: '#F472B6' },
+    { step: 3, text: language === 'en' ? '🎒 Pack School Bag' : '🎒 பள்ளிப் பையை தயார் செய்யுங்கள்', color: '#FBBF24' },
+    { step: 4, text: language === 'en' ? '🚌 Go to School' : '🚌 பள்ளிக்குச் செல்லுங்கள்', color: '#10B981' }
       ];
       setRoutineCards([...steps].sort(() => Math.random() - 0.5));
       
       setTimeout(() => {
-        speakText(language === 'en' ? 'Order the routine cards from first to last!' : 'காலை வழக்க அட்டைகளை வரிசைப்படுத்தவும்!');
+    speakText(language === 'en' ? 'Order the routine cards from first to last!' : 'காலை வழக்க அட்டைகளை வரிசைப்படுத்தவும்!');
       }, 100);
     }
   };
@@ -337,19 +476,19 @@ const PatientDashboard = () => {
           setTimeout(() => {
             setShowSuccess(true);
             setStarsEarned(stars => stars + 50);
-            speakText(language === 'en' ? 'Awesome job! Challenge complete!' : 'அற்புதம்! பணி முடிந்தது!');
+      speakText(language === 'en' ? 'Awesome job! Challenge complete!' : 'அற்புதம்! பணி முடிந்தது!');
           }, 300);
         } else {
           const shapes = [
-            { name: 'Circle', label: language === 'en' ? 'Circle' : 'வட்டம்', emoji: '🔴', color: '#EF4444' },
-            { name: 'Square', label: language === 'en' ? 'Square' : 'சதுரம்', emoji: '🟦', color: '#3B82F6' },
-            { name: 'Triangle', label: language === 'en' ? 'Triangle' : 'முக்கோணம்', emoji: '🔺', color: '#10B981' },
-            { name: 'Star', label: language === 'en' ? 'Star' : 'நட்சத்திரம்', emoji: '⭐', color: '#F59E0B' }
+    { name: 'Circle', label: language === 'en' ? 'Circle' : 'வட்டம்', emoji: '🔴', color: '#EF4444' },
+    { name: 'Square', label: language === 'en' ? 'Square' : 'சதுரம்', emoji: '🟦', color: '#3B82F6' },
+    { name: 'Triangle', label: language === 'en' ? 'Triangle' : 'முக்கோணம்', emoji: '🔺', color: '#10B981' },
+    { name: 'Star', label: language === 'en' ? 'Star' : 'நட்சத்திரம்', emoji: '⭐', color: '#F59E0B' }
           ];
           const target = shapes[Math.floor(Math.random() * shapes.length)];
           setShapeTarget(target);
           setShapeChoices([...shapes].sort(() => Math.random() - 0.5));
-          speakText(language === 'en' ? `Correct! Next: ${target.name}` : `சரி! அடுத்து: ${target.label}`);
+      speakText(language === 'en' ? `Correct! Next: ${target.name}` : `சரி! அடுத்தது: ${target.label}`);
         }
         return nextScore;
       });
@@ -388,7 +527,7 @@ const PatientDashboard = () => {
             setTimeout(() => {
               setShowSuccess(true);
               setStarsEarned(stars => stars + 50);
-              speakText(language === 'en' ? 'Fantastic memory match complete!' : 'அற்புதம்! பணி முடிந்தது!');
+          speakText(language === 'en' ? 'Fantastic memory match complete!' : 'அற்புதம்! பணி முடிந்தது!');
             }, 500);
           }
         }, 400);
@@ -415,22 +554,22 @@ const PatientDashboard = () => {
           setTimeout(() => {
             setShowSuccess(true);
             setStarsEarned(stars => stars + 50);
-            speakText(language === 'en' ? 'Vibrant food sorting complete!' : 'அற்புதம்! பணி முடிந்தது!');
+      speakText(language === 'en' ? 'Vibrant food sorting complete!' : 'அற்புதம்! பணி முடிந்தது!');
           }, 300);
         } else {
           const foods = [
-            { name: language === 'en' ? '🥦 Broccoli' : '🥦 முட்டைக்கோஸ்', isHealthy: true },
-            { name: language === 'en' ? '🍎 Apple' : '🍎 ஆப்பிள்', isHealthy: true },
-            { name: language === 'en' ? '🍌 Banana' : '🍌 வாழைப்பழம்', isHealthy: true },
-            { name: language === 'en' ? '🥕 Carrot' : '🥕 கேரட்', isHealthy: true },
-            { name: language === 'en' ? '🍩 Donut' : '🍩 டோனட்', isHealthy: false },
-            { name: language === 'en' ? '🍕 Pizza' : '🍕 பீட்சா', isHealthy: false },
-            { name: language === 'en' ? '🍨 Ice Cream' : '🍨 ஐஸ்கிரீம்', isHealthy: false },
-            { name: language === 'en' ? '🍟 Fries' : '🍟 உருளைக்கிழங்கு வறுவல்', isHealthy: false }
+    { name: language === 'en' ? '🥦 Broccoli' : '🥦 ப்ரோக்கோலி', isHealthy: true },
+    { name: language === 'en' ? '🍎 Apple' : '🍎 ஆப்பிள்', isHealthy: true },
+    { name: language === 'en' ? '🍌 Banana' : '🍌 வாழைப்பழம்', isHealthy: true },
+    { name: language === 'en' ? '🥕 Carrot' : '🥕 கேரட்', isHealthy: true },
+    { name: language === 'en' ? '🍩 Donut' : '🍩 டோனட்', isHealthy: false },
+    { name: language === 'en' ? '🍕 Pizza' : '🍕 பீட்சா', isHealthy: false },
+    { name: language === 'en' ? '🍨 Ice Cream' : '🍨 ஐஸ்கிரீம்', isHealthy: false },
+    { name: language === 'en' ? '🍟 Fries' : '🍟 உருளைக்கிழங்கு வறுவல்', isHealthy: false }
           ];
           const selected = foods[Math.floor(Math.random() * foods.length)];
           setFoodItem(selected);
-          speakText(language === 'en' ? `Correct! Next: ${selected.name.split(' ').slice(1).join(' ')}` : `சரி! அடுத்து: ${selected.name.split(' ').slice(1).join(' ')}`);
+      speakText(language === 'en' ? `Correct! Next: ${selected.name.split(' ').slice(1).join(' ')}` : `சரி! அடுத்தது: ${selected.name.split(' ').slice(1).join(' ')}`);
         }
         return nextScore;
       });
@@ -453,7 +592,7 @@ const PatientDashboard = () => {
       setTimeout(() => {
         setShowSuccess(true);
         setStarsEarned(stars => stars + 50);
-        speakText(language === 'en' ? 'Perfect routine sequencing complete!' : 'அற்புதம்! பணி முடிந்தது!');
+      speakText(language === 'en' ? 'Perfect routine sequencing complete!' : 'அற்புதம்! பணி முடிந்தது!');
       }, 500);
     }
   };
@@ -508,118 +647,122 @@ const PatientDashboard = () => {
 
   const renderDashboard = () => (
     <div className="animate-slide-up">
-      {/* Premium Hero Banner */}
-      <div style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%)', borderRadius: '28px', padding: '32px 40px', color: 'white', marginBottom: '32px', position: 'relative', overflow: 'hidden', boxShadow: '0 25px 50px rgba(124, 58, 237, 0.15)' }}>
+      {/* Premium Hero Banner - Glassmorphic Aesthetic */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(124, 58, 237, 0.9) 50%, rgba(236, 72, 153, 0.9) 100%)', borderRadius: '32px', padding: '40px 48px', color: 'white', marginBottom: '40px', position: 'relative', overflow: 'hidden', boxShadow: '0 30px 60px rgba(124, 58, 237, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)' }}>
         
         {/* Ambient Grid overlay */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', opacity: 0.05, pointerEvents: 'none', background: 'radial-gradient(circle, #FFF 1px, transparent 1px) 0 0/18px 18px' }}></div>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', opacity: 0.08, pointerEvents: 'none', background: 'radial-gradient(circle, #FFF 1px, transparent 1px) 0 0/20px 20px' }}></div>
+        {/* Glow Effects */}
+        <div style={{ position: 'absolute', top: '-50%', left: '-20%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }}></div>
         
         <div style={{ position: 'relative', zIndex: 2 }}>
            {/* Tag Badge */}
-           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)', padding: '6px 16px', borderRadius: '100px', fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '20px' }}>
+           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.2)', border: '1px solid rgba(255, 255, 255, 0.3)', padding: '8px 20px', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '24px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
              🚀 {language === 'en' ? 'MISSION STATION' : 'மிஷன் நிலையம்'}
            </div>
 
-           <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '8px', color: 'white', letterSpacing: '-0.02em', textShadow: '0 2px 10px rgba(0,0,0,0.15)', marginTop: 0 }}>
+           <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '12px', color: 'white', letterSpacing: '-1px', textShadow: '0 4px 15px rgba(0,0,0,0.2)', marginTop: 0 }}>
              {language === 'en' ? "Welcome Back, Hero!" : "மீண்டும் வருக, ஹீரோ!"}
            </h2>
-           <p style={{ fontSize: '1.25rem', opacity: 0.95, fontWeight: 600, textShadow: '0 2px 10px rgba(0,0,0,0.15)', margin: '0 0 32px' }}>
-             {language === 'en' ? "Ready to conquer your daily activities and unlock new super powers?" : "உங்களது தினசரி செயல்பாடுகளை முடித்து புதிய சூப்பர் பவர்களைப் பெறத் தயாரா?"}
+           <p style={{ fontSize: '1.35rem', opacity: 0.9, fontWeight: 500, textShadow: '0 2px 10px rgba(0,0,0,0.1)', margin: '0 0 40px', maxWidth: '600px', lineHeight: 1.5 }}>
+             {language === 'en' ? "Ready to conquer your daily activities and unlock new super powers?" : "உங்கள் தினசரி செயல்பாடுகளை முடிக்க தயாரா?"}
            </p>
 
            {/* Banner Badge Pills */}
-           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-             <div style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '14px', padding: '10px 20px', textAlign: 'left', minWidth: '150px' }}>
-               <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>RANK</span>
-               <span style={{ fontSize: '1.05rem', fontWeight: 900, color: 'white', display: 'block', marginTop: '2px' }}>LEVEL {childLevel} EXPLORER</span>
+           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+             <div className="bento-card" style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '20px', padding: '16px 24px', textAlign: 'left', minWidth: '160px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+               <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>RANK</span>
+               <span style={{ fontSize: '1.15rem', fontWeight: 900, color: 'white', display: 'block' }}>LEVEL {childLevel} EXPLORER</span>
              </div>
-             <div style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '14px', padding: '10px 20px', textAlign: 'left', minWidth: '150px' }}>
-               <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>DAILY STREAK</span>
-               <span style={{ fontSize: '1.05rem', fontWeight: 900, color: '#FDE047', display: 'block', marginTop: '2px' }}>🔥 7 DAYS ACTIVE</span>
+             <div className="bento-card" style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '20px', padding: '16px 24px', textAlign: 'left', minWidth: '160px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+               <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>DAILY STREAK</span>
+            <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FCD34D', display: 'block' }}>🔥 7 DAYS ACTIVE</span>
              </div>
-             <div style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '14px', padding: '10px 20px', textAlign: 'left', minWidth: '150px' }}>
-               <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>BONUS XP</span>
-               <span style={{ fontSize: '1.05rem', fontWeight: 900, color: '#4ADE80', display: 'block', marginTop: '2px' }}>⭐ +250 XP READY</span>
+             <div className="bento-card" style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '20px', padding: '16px 24px', textAlign: 'left', minWidth: '160px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+               <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, color: 'rgba(255, 255, 255, 0.7)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>BONUS XP</span>
+            <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#4ADE80', display: 'block' }}>⭐ +250 XP READY</span>
              </div>
            </div>
         </div>
 
-        <div style={{ position: 'absolute', right: '30px', bottom: '-20px', opacity: 0.12, pointerEvents: 'none', zIndex: 1 }}>
-          <Rocket size={180} style={{ transform: 'rotate(45deg)' }} />
+        <div style={{ position: 'absolute', right: '10%', bottom: '-15%', opacity: 0.15, pointerEvents: 'none', zIndex: 1, filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}>
+          <Rocket size={240} style={{ transform: 'rotate(45deg)' }} />
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '48px' }}>
         
-        {/* Learning Worlds Portal Section */}
+                {language === 'en' ? "Learning Worlds Portal" : "கற்றல் உலகங்கள்"}
         <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
             <div>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: 900, margin: 0, color: '#0F172A', letterSpacing: '-0.5px' }}>
-                {language === 'en' ? "Learning Worlds Portal" : "கற்றல் உலகங்கள் போர்டல்"}
+              <h3 style={{ fontSize: '2.2rem', fontWeight: 900, margin: 0, color: '#0F172A', letterSpacing: '-1px' }}>
+                {language === 'en' ? "Learning Worlds Portal" : "கற்றல் உலகங்கள்"}
               </h3>
-              <p style={{ fontSize: '1.05rem', color: 'var(--slate-500)', fontWeight: 600, margin: '6px 0 0' }}>
-                {language === 'en' ? "Select a gamified galaxy to master special communication & sensory goals." : "தொடர்பு மற்றும் உணர்வுசார் இலக்குகளை வெல்ல ஒரு கேமிஃபைட் கேலக்ஸியைத் தேர்ந்தெடுக்கவும்."}
+              <p style={{ fontSize: '1.15rem', color: 'var(--slate-500)', fontWeight: 500, margin: '8px 0 0' }}>
+                {language === 'en' ? "Select a gamified galaxy to master special communication & sensory goals." : "சிறப்பு தொடர்பு மற்றும் உணர்வு இலக்குகளை அடைய ஒரு உலகத்தைத் தேர்ந்தெடுக்கவும்."}
               </p>
             </div>
-            <button className="btn-neon" style={{ background: '#7C3AED', padding: '12px 28px', fontSize: '0.95rem', fontWeight: 800, borderRadius: '100px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              {language === 'en' ? 'View Cosmos Map' : 'விண்வெளி வரைபடம்'} <ChevronRight size={16} />
+            <button className="btn-neon" style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)', padding: '14px 32px', fontSize: '1rem', fontWeight: 800, borderRadius: '100px', display: 'inline-flex', alignItems: 'center', gap: '10px', border: '1px solid rgba(255,255,255,0.2)' }}>
+              {language === 'en' ? 'View Cosmos Map' : 'வரைபடம் பார்க்க'} <ChevronRight size={18} />
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
             {[
-              { id: 1, title: language === 'en' ? 'Smart Hero Academy' : 'ஸ்மார்ட் ஹீரோ அகாடமி', tag: language === 'en' ? 'ACADEMY' : 'அகாடமி', tagBg: '#F3E8FF', tagColor: '#8B5CF6', desc: language === 'en' ? 'Master Letters & Numbers!' : 'எழுத்துக்கள் & எண்களைக் கற்றுக்கொள்ளுங்கள்!', icon: BookOpen, color: '#8B5CF6', mastery: 85, path: '/activity/education' },
-              { id: 2, title: language === 'en' ? 'Emotion Explorer' : 'உணர்ச்சி ஆய்வாளர்', tag: language === 'en' ? 'SOCIAL' : 'சமூகவியல்', tagBg: '#ECFDF5', tagColor: '#10B981', desc: language === 'en' ? 'Express Your Feelings!' : 'உங்கள் உணர்ச்சிகளை வெளிப்படுத்துங்கள்!', icon: Smile, color: '#10B981', mastery: 60, path: '/activity/emotion-matching' },
-              { id: 3, title: language === 'en' ? 'Communication Hero' : 'தொடர்பு ஹீரோ', tag: language === 'en' ? 'DIALOGUE' : 'உரையாடல்', tagBg: '#FDF2F8', tagColor: '#EC4899', desc: language === 'en' ? 'Talk & Play Together!' : 'ஒன்றாகப் பேசி விளையாடுங்கள்!', icon: MessageCircle, color: '#F472B6', mastery: 90, path: '/activity/communication' }
+              { id: 1, title: language === 'en' ? 'Smart Hero Academy' : 'ஸ்மார்ட் ஹீரோ அகாடமி', tag: language === 'en' ? 'ACADEMY' : 'அகாடமி', tagBg: 'linear-gradient(135deg, #F3E8FF, #E0E7FF)', tagColor: '#6366F1', desc: language === 'en' ? 'Master Letters & Numbers!' : 'எழுத்துக்கள் & எண்களைக் கற்றுக்கொள்ளுங்கள்!', icon: BookOpen, color: '#6366F1', mastery: 85, path: '/activity/education', glow: 'rgba(99, 102, 241, 0.4)' },
+              { id: 2, title: language === 'en' ? 'Emotion Explorer' : 'உணர்ச்சி ஆய்வாளர்', tag: language === 'en' ? 'SOCIAL' : 'சமூகவியல்', tagBg: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)', tagColor: '#10B981', desc: language === 'en' ? 'Express Your Feelings!' : 'உங்கள் உணர்ச்சிகளை வெளிப்படுத்துங்கள்!', icon: Smile, color: '#10B981', mastery: 60, path: '/activity/emotion-matching', glow: 'rgba(16, 185, 129, 0.4)' },
+              { id: 3, title: language === 'en' ? 'Communication' : 'தொடர்பு', tag: language === 'en' ? 'COMMUNICATION' : 'தொடர்பு', tagBg: 'linear-gradient(135deg, #FDF2F8, #FCE7F3)', tagColor: '#EC4899', desc: language === 'en' ? 'Talk & Learn with Panda!' : 'பாண்டாவுடன் பேசிப் பழகுங்கள்!', icon: MessageCircle, color: '#EC4899', mastery: 90, path: '/activity/communication', glow: 'rgba(236, 72, 153, 0.4)' }
             ].map(w => (
-              <div key={w.id} onClick={() => navigate(w.path)} className="bento-card btn-pop" style={{ padding: '32px', border: '1px solid #E2E8F0', borderRadius: '24px', cursor: 'pointer', background: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div key={w.id} onClick={() => navigate(w.path)} className="bento-card btn-pop" style={{ padding: '36px', border: '1px solid rgba(255,255,255,0.6)', borderRadius: '32px', cursor: 'pointer', background: 'rgba(255, 255, 255, 0.75)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 20px 40px rgba(0,0,0,0.04)', backdropFilter: 'blur(20px)' }}>
                 
+                {/* Background Glow */}
+                <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '150px', height: '150px', background: w.color, filter: 'blur(70px)', opacity: 0.15, pointerEvents: 'none' }}></div>
+
                 {/* Category Tag Badge */}
-                <div style={{ position: 'absolute', top: '24px', right: '24px', background: w.tagBg, color: w.tagColor, padding: '4px 14px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ position: 'absolute', top: '28px', right: '28px', background: w.tagBg, color: w.tagColor, padding: '6px 18px', borderRadius: '100px', fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', boxShadow: `0 4px 10px ${w.glow}` }}>
                   {w.tag}
                 </div>
 
-                <div>
-                  <div style={{ width: '64px', height: '64px', background: 'var(--slate-50)', border: '1px solid var(--slate-100)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: w.color, marginBottom: '24px', flexShrink: 0 }}>
-                    <w.icon size={30} strokeWidth={2.5} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ width: '72px', height: '72px', background: 'white', border: `2px solid ${w.tagBg}`, borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: w.color, marginBottom: '28px', flexShrink: 0, boxShadow: `0 10px 20px ${w.glow}` }}>
+                    <w.icon size={36} strokeWidth={2.5} />
                   </div>
-                  <h4 style={{ fontSize: '1.35rem', fontWeight: 900, marginBottom: '6px', color: '#0F172A', marginTop: 0, letterSpacing: '-0.3px' }}>{w.title}</h4>
-                  <p style={{ fontSize: '0.95rem', color: 'var(--slate-500)', fontWeight: 650, margin: 0, lineHeight: 1.4 }}>{w.desc}</p>
+                  <h4 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '8px', color: '#0F172A', marginTop: 0, letterSpacing: '-0.5px' }}>{w.title}</h4>
+                  <p style={{ fontSize: '1rem', color: 'var(--slate-500)', fontWeight: 600, margin: 0, lineHeight: 1.5 }}>{w.desc}</p>
                 </div>
 
                 {/* Integrated Progress Bar */}
-                <div style={{ marginTop: '24px', borderTop: '1px solid var(--slate-100)', paddingTop: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 800, color: 'var(--slate-400)', marginBottom: '8px' }}>
+                <div style={{ marginTop: '32px', position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, color: 'var(--slate-400)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <span>SECTOR PROGRESS</span>
                     <span style={{ color: w.color, fontWeight: 900 }}>{w.mastery}% Mastery</span>
                   </div>
-                  <div style={{ width: '100%', height: '8px', background: 'var(--slate-100)', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ width: `${w.mastery}%`, height: '100%', background: w.color, borderRadius: '10px' }}></div>
+                  <div style={{ width: '100%', height: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '12px', overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ width: `${w.mastery}%`, height: '100%', background: `linear-gradient(90deg, ${w.color}, ${w.color}DD)`, borderRadius: '12px', boxShadow: `0 0 10px ${w.glow}` }}></div>
                   </div>
                 </div>
-
               </div>
             ))}
           </div>
         </section>
 
         {/* Brand New Rich Content: Today's Hero Progress & Habit Tracker */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.7fr', gap: '32px', alignItems: 'stretch' }}>
+        <section style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px', alignItems: 'stretch' }}>
           
           {/* Habits Grid Column */}
           <div className="bento-card" style={{ padding: '36px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginTop: 0, marginBottom: 0, color: '#0F172A', letterSpacing: '-0.5px' }}>
-                  {language === 'en' ? "Today's Hero Habits" : "இன்றைய ஹீரோ பழக்கங்கள்"}
+              {language === 'en' ? "Today's Hero Habits" : "இன்றைய ஹீரோ பழக்கங்கள்"}
                 </h3>
                 <div style={{ background: '#F3E8FF', color: '#7C3AED', padding: '6px 14px', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 900 }}>
-                  {behaviorLogs.filter(b => b.done).length}/{behaviorLogs.length} {language === 'en' ? 'COMPLETED' : 'முடிந்தது'}
+              {behaviorLogs.filter(b => b.done).length}/{behaviorLogs.length} {language === 'en' ? 'COMPLETED' : 'முடிந்தது'}
                 </div>
               </div>
               <p style={{ fontSize: '1rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '28px', marginTop: 0 }}>
-                {language === 'en' ? "Complete all habits to unlock a secret daily treasure box!" : "ரகசிய தினசரி புதையல் பெட்டியைத் திறக்க அனைத்து பழக்கங்களையும் முடிக்கவும்!"}
+              {language === 'en' ? "Complete all habits to unlock a secret daily treasure box!" : "ரகசிய தினசரி புதையல் பெட்டியைத் திறக்க அனைத்துப் பழக்கங்களையும் முடிக்கவும்!"}
               </p>
 
               {/* Dynamic Habit Streak Progress Bar */}
@@ -659,34 +802,73 @@ const PatientDashboard = () => {
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Robot Buddy speech Column */}
-          <div className="bento-card" style={{ padding: '36px', background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)', color: 'white', borderRadius: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', boxShadow: '0 20px 40px rgba(37, 99, 235, 0.15)' }}>
-            
-            {/* Soft decorative background circles */}
-            <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }}></div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 2 }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Bot size={60} style={{ animation: 'float 3s ease-in-out infinite', filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.15))' }} />
-                <div style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '4px 14px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 900, letterSpacing: '0.5px' }}>
-                  {language === 'en' ? 'ONLINE COMPANION' : 'ஆன்லைன் துணை'}
-                </div>
+        {/* Brand New Extra Features Grid: Daily Schedule & Breathing Game */}
+        <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginTop: '32px' }}>
+          
+          {/* Daily Visual Schedule */}
+          <div className="bento-card" style={{ padding: '36px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '24px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ background: '#F0F9FF', color: '#0EA5E9', padding: '10px', borderRadius: '14px' }}>
+                <Clock size={24} />
               </div>
-
-              <div>
-                <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 850, letterSpacing: '-0.01em' }}>
-                  {language === 'en' ? "Aayu's Daily Guide" : "ஆயுவின் தினசரி வழிகாட்டி"}
-                </h4>
-                <p style={{ margin: '10px 0 0', fontSize: '1.05rem', opacity: 0.95, lineHeight: 1.5, fontWeight: 600 }}>
-                  {language === 'en' 
-                    ? "Hey Arjun! Complete your Daily Missions today to unlock your daily Super Badge! Let's grow together!"
-                    : "ஹே அர்ஜுன்! இன்று இரட்டை நட்சத்திர வெகுமதியைப் பெற தினசரி பணிகளை முடியுங்கள்! ஒன்றாக வளர்வோம்!"}
-                </p>
-              </div>
-
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                {language === 'en' ? "Today's Visual Schedule" : "இன்றைய காட்சி அட்டவணை"}
+              </h3>
             </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
+              <div style={{ position: 'absolute', left: '26px', top: '30px', bottom: '30px', width: '2px', background: 'var(--slate-100)', zIndex: 0 }}></div>
+              {scheduleItems.map((item, index) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1 }}>
+                  <div style={{ width: '54px', height: '54px', borderRadius: '50%', background: item.status === 'done' ? '#10B981' : item.status === 'current' ? '#F59E0B' : '#F1F5F9', border: item.status === 'current' ? '4px solid #FEF3C7' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', boxShadow: item.status !== 'upcoming' ? '0 4px 10px rgba(0,0,0,0.1)' : 'none', zIndex: 2 }}>
+                    {item.status === 'done' ? <CheckCircle color="white" size={24} /> : item.icon}
+                  </div>
+                  <div style={{ background: item.status === 'current' ? '#FFFBEB' : 'var(--slate-50)', padding: '16px 20px', borderRadius: '16px', flex: 1, border: item.status === 'current' ? '1px solid #FCD34D' : '1px solid var(--slate-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: item.status === 'current' ? '#D97706' : 'var(--slate-400)', display: 'block', marginBottom: '4px' }}>{item.time}</span>
+                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: item.status === 'current' ? '#92400E' : 'var(--slate-700)' }}>{item.title}</span>
+                    </div>
+                    {item.status === 'current' && (
+                      <span style={{ background: '#FEF3C7', color: '#D97706', padding: '4px 10px', borderRadius: '100px', fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase' }}>Now</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Calming Breathing Game */}
+          <div className="bento-card" style={{ padding: '36px', background: 'linear-gradient(135deg, #FDF4FF 0%, #F3E8FF 100%)', border: '1px solid #E9D5FF', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+            
+            <h3 style={{ fontSize: '1.8rem', fontWeight: 900, margin: '0 0 10px 0', color: '#7C3AED', letterSpacing: '-0.5px', zIndex: 2 }}>
+            {language === 'en' ? "Calm Down Bubble" : "அமைதி குமிழி"}
+            </h3>
+            <p style={{ fontSize: '1.05rem', color: '#9333EA', fontWeight: 600, margin: '0 0 40px 0', zIndex: 2 }}>
+              {language === 'en' ? "Feeling overwhelmed? Let's take a deep breath together." : "அதிகமாக உணர்கிறீர்களா? ஒன்றாக ஒரு நீண்ட மூச்சு எடுப்போம்."}
+            </p>
+
+            <div style={{ position: 'relative', width: '200px', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, marginBottom: '30px' }}>
+              <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(192, 132, 252, 0.2)', transform: `scale(${breatheScale})`, transition: 'transform 4s ease-in-out' }}></div>
+              <div style={{ position: 'absolute', width: '70%', height: '70%', borderRadius: '50%', background: 'rgba(192, 132, 252, 0.4)', transform: `scale(${breatheScale})`, transition: 'transform 4s ease-in-out', transitionDelay: '0.1s' }}></div>
+              
+              <button 
+                onClick={startBreathingExercise}
+                disabled={breathingPhase !== 'idle'}
+                style={{ position: 'relative', width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg, #A855F7, #7C3AED)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: breathingPhase === 'idle' ? 'pointer' : 'default', boxShadow: '0 10px 25px rgba(124, 58, 237, 0.4)', zIndex: 3, transition: 'all 0.3s' }}
+              >
+                <Heart size={40} fill="white" style={{ animation: breathingPhase !== 'idle' ? 'pulse 2s infinite' : 'none' }} />
+              </button>
+            </div>
+
+            <div style={{ background: 'white', padding: '12px 24px', borderRadius: '100px', fontWeight: 800, color: '#7C3AED', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', zIndex: 2 }}>
+                {breathingPhase === 'idle' && (language === 'en' ? "Click the heart to start!" : "தொடங்க இதயத்தை கிளிக் செய்யவும்!")}
+                {breathingPhase === 'inhale' && (language === 'en' ? "Breathe in..." : "உள்ளே மூச்சு விடவும்...")}
+                {breathingPhase === 'hold' && (language === 'en' ? "Hold it..." : "அப்படியே பிடி...")}
+                {breathingPhase === 'exhale' && (language === 'en' ? "Breathe out..." : "வெளியே மூச்சு விடவும்...")}
+            </div>
+
           </div>
 
         </section>
@@ -698,46 +880,46 @@ const PatientDashboard = () => {
     <div className="animate-slide-up">
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
          <h2 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '10px', color: '#0F172A', letterSpacing: '-0.5px' }}>
-           {language === 'en' ? 'Calm Skills Universe' : 'அமைதியான திறன் பிரபஞ்சம்'}
+            {language === 'en' ? 'Calm Skills Universe' : 'அமைதியான திறன் பிரபஞ்சம்'}
          </h2>
          <p style={{ fontSize: '1.15rem', color: 'var(--slate-500)', fontWeight: 650, margin: 0 }}>
-           {language === 'en' ? 'Predictable, calm, and delightful matches to boost learning!' : 'கற்றலை மேம்படுத்த கணிக்கக்கூடிய, அமைதியான மற்றும் மகிழ்ச்சியான விளையாட்டுகள்!'}
+            {language === 'en' ? 'Predictable, calm, and delightful matches to boost learning!' : 'கற்றலை மேம்படுத்த கணிக்கக்கூடிய, அமைதியான மற்றும் மகிழ்ச்சியான விளையாட்டுகள்!'}
          </p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '32px' }}>
         {[
           { 
             id: 'match_shape', 
-            title: language === 'en' ? 'Shape & Color Matcher' : 'வடிவம் மற்றும் வண்ணப் பொருத்தம்', 
-            desc: language === 'en' ? 'Calmly match target shapes & colors at your own comfortable pace.' : 'வடிவங்கள் மற்றும் வண்ணங்களை உங்கள் சொந்த வேகத்தில் அமைதியாகப் பொருத்துங்கள்.', 
-            badge: '🔴 🟦 🔺 ⭐', 
+            title: language === 'en' ? 'Shape & Color Matcher' : 'வடிவம் மற்றும் வண்ணப் பொருத்தம்',
+            desc: language === 'en' ? 'Calmly match target shapes & colors at your own comfortable pace.' : 'வடிவங்கள் மற்றும் வண்ணங்களை உங்கள் சொந்த வேகத்தில் அமைதியாகப் பொருத்தவும்.',
+            badge: '🔴 🟦 🔺 ⭐',
             badgeBg: '#F5F3FF',
             color: '#8B5CF6',
             glowColor: 'rgba(139, 92, 246, 0.15)'
           },
           { 
             id: 'memory_pair', 
-            title: language === 'en' ? 'Animal Memory: Find the Pair' : 'விலங்கு நினைவகம்: ஜோடியைக் கண்டுபிடி', 
-            desc: language === 'en' ? 'Flip cute animal cards and discover matched pairs with soothing feedback.' : 'அழகான விலங்கு அட்டைகளைத் திருப்பி, ஜோடிகளைக் கண்டறியவும்.', 
-            badge: '🐶 🐱 🐹 🐻', 
+            title: language === 'en' ? 'Animal Memory: Find the Pair' : 'விலங்கு நினைவகம்: ஜோடியைக் கண்டுபிடி',
+            desc: language === 'en' ? 'Flip cute animal cards and discover matched pairs with soothing feedback.' : 'அழகான விலங்கு அட்டைகளைத் திருப்பி, ஜோடிகளைக் கண்டறியவும்.',
+            badge: '🐶 🐱 🐹 🐻',
             badgeBg: '#ECFDF5',
             color: '#10B981',
             glowColor: 'rgba(16, 185, 129, 0.15)'
           },
           { 
             id: 'sort_food', 
-            title: language === 'en' ? 'Healthy Food Sorter' : 'சத்தான உணவு பிரிப்பான்', 
-            desc: language === 'en' ? 'Classify yummy treats versus healthy items into corresponding baskets.' : 'அருமையான இனிப்புகள் மற்றும் சத்தான உணவுகளை கூடைகளில் வகைப்படுத்தவும்.', 
-            badge: '🥦 🍎 🍩 🍕', 
+            title: language === 'en' ? 'Healthy Food Sorter' : 'சத்தான உணவு பிரிப்பான்',
+            desc: language === 'en' ? 'Classify yummy treats versus healthy items into corresponding baskets.' : 'அருமையான இனிப்புகள் மற்றும் சத்தான உணவுகளை கூடைகளில் வகைப்படுத்தவும்.',
+            badge: '🥦 🍎 🍩 🍕',
             badgeBg: '#FDF2F8',
             color: '#F472B6',
             glowColor: 'rgba(244, 114, 182, 0.15)'
           },
           { 
             id: 'sequence_routine', 
-            title: language === 'en' ? "Hero's Morning Routine" : 'ஹீரோவின் காலை வழக்கம்', 
-            desc: language === 'en' ? 'Arrange essential scrambled steps for starting a successful day.' : 'ஒரு வெற்றிகரமான நாளைத் தொடங்க தேவையான காலை நடவடிக்கைகளை வரிசைப்படுத்தவும்.', 
-            badge: '🪥 🍳 🎒 🚌', 
+            title: language === 'en' ? "Hero's Morning Routine" : 'ஹீரோவின் காலை வழக்கம்',
+            desc: language === 'en' ? 'Arrange essential scrambled steps for starting a successful day.' : 'ஒரு வெற்றிகரமான நாளைத் தொடங்க தேவையான காலை நடவடிக்கைகளை வரிசைப்படுத்தவும்.',
+            badge: '🪥 🍳 🎒 🚌',
             badgeBg: '#F0F9FF',
             color: '#38BDF8',
             glowColor: 'rgba(56, 189, 248, 0.15)'
@@ -806,8 +988,8 @@ const PatientDashboard = () => {
                 boxShadow: `0 10px 24px -5px ${game.glowColor}`
               }}
             >
-              <span>{language === 'en' ? 'ENTER MISSION' : 'மிஷனில் நுழை'}</span>
-              <span style={{ fontSize: '1.2rem' }}>⮕</span>
+                    <span>{language === 'en' ? 'ENTER MISSION' : 'மிஷனில் நுழை'}</span>
+              <span style={{ fontSize: '1.2rem' }}>➔</span>
             </button>
           </div>
         ))}
@@ -823,17 +1005,17 @@ const PatientDashboard = () => {
           <div className="bento-card animate-slide-up" style={{ maxWidth: '700px', width: '100%', padding: '60px', textAlign: 'center', border: 'none', background: 'white', borderRadius: '28px' }}>
              <div style={{ display: 'flex', justifyContent: 'center', color: '#FBBF24', marginBottom: '30px', animation: 'float 3s infinite' }}><Trophy size={110} /></div>
              <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '20px', color: '#10B981' }}>
-               {language === 'en' ? 'AWESOME!' : 'அற்புதம்!'}
+                {language === 'en' ? 'AWESOME!' : 'அற்புதம்!'}
              </h2>
              <p style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--slate-800)', marginBottom: '40px', lineHeight: 1.5 }}>
-               {language === 'en' ? 'Mission completed with gentle focus!' : 'அமைதியான கவனத்துடன் பணி வெற்றிகரமாக முடிந்தது!'}<br/>
-               <span style={{ color: '#F59E0B', fontSize: '1.8rem', fontWeight: 900 }}>★ +50 STARS ⭐</span>
+                {language === 'en' ? 'Mission completed with gentle focus!' : 'அமைதியான கவனத்துடன் பணி வெற்றிகரமாக முடிந்தது!'}<br/>
+                <span style={{ color: '#F59E0B', fontSize: '1.8rem', fontWeight: 900 }}>★ +50 STARS ⭐</span>
              </p>
              <button onClick={() => {
                setActiveGame(null);
                setShowSuccess(false);
              }} className="btn-neon" style={{ padding: '16px 80px', borderRadius: '100px', fontSize: '1.3rem', background: '#10B981', border: 'none' }}>
-               {language === 'en' ? 'CLAIM REWARD' : 'நட்சத்திரங்களைப் பெறு'}
+                {language === 'en' ? 'CLAIM REWARD' : 'நட்சத்திரங்களைப் பெறு'}
              </button>
           </div>
         </div>
@@ -951,7 +1133,7 @@ const PatientDashboard = () => {
               <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
                 <div style={{ background: '#FAF5FF', border: '2px solid #E9D5FF', padding: '24px 40px', borderRadius: '24px', width: '100%', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.05)' }}>
                   <p style={{ color: '#6B21A8', fontWeight: 800, fontSize: '1.15rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 12px' }}>
-                    {language === 'en' ? 'FIND THE MATCHING SHAPE' : 'பொருத்தமான வடிவத்தைக் கண்டறியவும்'}
+                {language === 'en' ? 'FIND THE MATCHING SHAPE' : 'பொருத்தமான வடிவத்தைக் கண்டறியவும்'}
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '6rem', lineHeight: 1 }}>{shapeTarget.emoji}</span>
@@ -1010,7 +1192,7 @@ const PatientDashboard = () => {
               <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ color: '#065F46', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 8px' }}>
-                    {language === 'en' ? 'FIND ALL MATCHING ANIMAL PAIRS!' : 'அனைத்து விலங்கு ஜோடிகளையும் கண்டுபிடி!'}
+                {language === 'en' ? 'FIND ALL MATCHING ANIMAL PAIRS!' : 'அனைத்து விலங்கு ஜோடிகளையும் கண்டுபிடி!'}
                   </p>
                 </div>
 
@@ -1054,7 +1236,7 @@ const PatientDashboard = () => {
               <div style={{ width: '100%', maxWidth: '600px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
                 <div>
                   <p style={{ color: '#9D174D', fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 10px' }}>
-                    {language === 'en' ? 'CLASSIFY THIS FOOD ITEM' : 'இந்த உணவை வகைப்படுத்துங்கள்'}
+                {language === 'en' ? 'CLASSIFY THIS FOOD ITEM' : 'இந்த உணவை வகைப்படுத்துங்கள்'}
                   </p>
                   
                   <div style={{ background: '#FFF5F5', border: '2px solid #FECDD3', padding: '20px', borderRadius: '24px', display: 'inline-block', minWidth: '180px', boxShadow: '0 10px 20px rgba(244,114,182,0.05)' }}>
@@ -1098,7 +1280,7 @@ const PatientDashboard = () => {
                       boxShadow: '0 10px 20px rgba(16,185,129,0.08)'
                     }}
                   >
-                    🍎 {language === 'en' ? 'HEALTHY FRUIT/VEGGIE' : 'சத்தான உணவு'}
+                🍎 {language === 'en' ? 'HEALTHY FRUIT/VEGGIE' : 'சத்தான உணவு'}
                   </button>
 
                   <button 
@@ -1117,7 +1299,7 @@ const PatientDashboard = () => {
                       boxShadow: '0 10px 20px rgba(249,115,22,0.08)'
                     }}
                   >
-                    🍕 {language === 'en' ? 'SWEET TREAT / SNACK' : 'இனிப்பு / தின்பண்டம்'}
+                🍕 {language === 'en' ? 'SWEET TREAT / SNACK' : 'இனிப்பு / தின்பண்டம்'}
                   </button>
                 </div>
               </div>
@@ -1128,7 +1310,7 @@ const PatientDashboard = () => {
               <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ color: '#075985', fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 6px' }}>
-                    {language === 'en' ? 'ORDER ROUTINE CARDS FROM FIRST TO LAST' : 'காலை வழக்க அட்டைகளை வரிசைப்படுத்தவும்!'}
+                {language === 'en' ? 'ORDER ROUTINE CARDS FROM FIRST TO LAST' : 'காலை வழக்க அட்டைகளை வரிசைப்படுத்தவும்!'}
                   </p>
                 </div>
 
@@ -1214,7 +1396,7 @@ const PatientDashboard = () => {
               style={{ background: '#94A3B8', color: 'white', fontWeight: 800, fontSize: '1.1rem', padding: '12px 60px', borderRadius: '100px', border: 'none', cursor: 'pointer' }}
               className="btn-pop"
             >
-              {language === 'en' ? 'LEAVE GAME' : 'விளையாட்டை விட்டு வெளியேறு'}
+                {language === 'en' ? 'LEAVE GAME' : 'விளையாட்டை விட்டு வெளியேறு'}
             </button>
           </div>
 
@@ -1247,10 +1429,10 @@ const PatientDashboard = () => {
           {/* Main Planner Grid Column */}
           <div className="bento-card" style={{ padding: '40px', border: '1px solid #E2E8F0', borderRadius: '24px', background: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 12px 36px rgba(0,0,0,0.02)' }}>
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '36px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
                  <div>
                    <h2 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '6px', color: '#0F172A', letterSpacing: '-0.5px', marginTop: 0 }}>
-                     {language === 'en' ? 'Hero Mission Planner' : 'ஹீரோ மிஷன் பிளானர்'}
+                     {language === 'en' ? 'Hero Activity Planner' : 'ஹீரோ செயல் பிளானர்'}
                    </h2>
                    <p style={{ color: 'var(--slate-500)', fontWeight: 650, fontSize: '1.05rem', margin: 0 }}>
                      {language === 'en' ? 'Follow the path to earn the Mega Hero Badge!' : 'மெகா ஹீரோ பேட்ஜைப் பெற பாதையைப் பின்பற்றுங்கள்!'}
@@ -1259,6 +1441,27 @@ const PatientDashboard = () => {
                  <div style={{ background: '#D1FAE5', color: '#065F46', padding: '8px 18px', borderRadius: '100px', fontWeight: 900, fontSize: '0.85rem', letterSpacing: '0.5px' }}>
                    🚀 {language === 'en' ? '7 DAY STREAK!' : '7 நாட்கள் தொடர் சவால்!'}
                  </div>
+              </div>
+
+              {/* Interactive Activities Progress Bar */}
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '20px 24px', borderRadius: '16px', marginBottom: '28px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 850, color: '#64748B', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {language === 'en' ? "Today's Progress" : "இன்றைய முன்னேற்றம்"}
+                  </span>
+                  <span style={{ fontWeight: 900, color: '#4F46E5', fontSize: '1rem' }}>
+              {plannerTasks.filter(t => t.done).length} / {plannerTasks.length} {language === 'en' ? 'Completed' : 'முடிந்தது'}
+                  </span>
+                </div>
+                <div style={{ width: '100%', height: '10px', background: '#E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${(plannerTasks.filter(t => t.done).length / plannerTasks.length) * 100}%`, 
+                    height: '100%', 
+                    background: 'linear-gradient(90deg, #4F46E5 0%, #8B5CF6 100%)', 
+                    borderRadius: '10px',
+                    transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}></div>
+                </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1327,15 +1530,64 @@ const PatientDashboard = () => {
                           {task.done ? (
                             <>
                               <CheckCircle size={14} strokeWidth={3} /> 
-                              <span>{language === 'en' ? 'COMPLETED' : 'முடிந்தது'}</span>
+                      <span>{language === 'en' ? 'COMPLETED' : 'முடிந்தது'}</span>
                             </>
                           ) : (
-                            <span>{language === 'en' ? 'START MISSION' : 'பணியைத் தொடங்கு'}</span>
+                      <span>{language === 'en' ? 'START ACTIVITY' : 'செயலைத் தொடங்கு'}</span>
                           )}
                        </button>
                     </div>
                   );
                 })}
+
+                {/* Free Choice Reward Slot */}
+                <div 
+                  className="bento-card" 
+                  style={{ 
+                    padding: '20px 24px', 
+                    background: rewardClaimed ? '#FEF3C7' : (rewardUnlocked ? '#FFFBEB' : '#F8FAFC'), 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '16px', 
+                    border: rewardClaimed ? '2px solid #F59E0B' : (rewardUnlocked ? '2px dashed #FCD34D' : '2px dashed #E2E8F0'), 
+                    borderRadius: '16px',
+                    opacity: rewardUnlocked ? 1 : 0.6,
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                   <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: rewardUnlocked ? '#F59E0B' : '#CBD5E1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <Star size={24} fill="white" />
+                   </div>
+                   
+                   <div style={{ flex: 1 }}>
+                      <h4 style={{ fontSize: '1.1rem', fontWeight: 850, margin: '0 0 4px 0', color: rewardUnlocked ? '#92400E' : '#64748B' }}>
+                {language === 'en' ? 'Free Choice Reward' : 'இலவச தேர்வு வெகுமதி'}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 650, color: rewardUnlocked ? '#B45309' : '#94A3B8' }}>
+                        {rewardUnlocked
+                          ? (language === 'en' ? 'Unlocked! Pick your favorite game to play.' : 'Unlocked!')
+                          : (language === 'en' ? 'Complete all activities above to unlock.' : 'Complete all activities above to unlock.')}
+                      </p>
+                   </div>
+
+                   <button 
+                     onClick={claimReward}
+                     disabled={!rewardUnlocked || rewardClaimed}
+                     className={rewardUnlocked && !rewardClaimed ? "btn-pop" : ""}
+                     style={{ 
+                       background: rewardClaimed ? '#F59E0B' : (rewardUnlocked ? '#D97706' : '#E2E8F0'), 
+                       color: rewardUnlocked ? 'white' : '#94A3B8',
+                       border: 'none', borderRadius: '100px', padding: '10px 20px', 
+                       fontSize: '0.8rem', fontWeight: 900, cursor: rewardUnlocked && !rewardClaimed ? 'pointer' : 'default',
+                       boxShadow: rewardUnlocked && !rewardClaimed ? '0 4px 15px rgba(217, 119, 6, 0.3)' : 'none'
+                     }}
+                   >
+                      {rewardClaimed 
+                        ? (language === 'en' ? 'CLAIMED' : 'பெறப்பட்டது') 
+                        : (language === 'en' ? 'CLAIM REWARD' : 'வெகுமதியைப் பெறு')}
+                   </button>
+                </div>
+
               </div>
             </div>
           </div>
@@ -1343,57 +1595,7 @@ const PatientDashboard = () => {
           {/* Right Sidebar Columns */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
              
-             {/* Mission Advice Glowing Card */}
-             <div className="bento-card" style={{ padding: '32px', background: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', color: 'white', borderRadius: '24px', boxShadow: '0 20px 40px rgba(109, 40, 217, 0.15)' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '12px', color: 'white', letterSpacing: '-0.3px', marginTop: 0 }}>
-                  {language === 'en' ? 'Mission Advice' : 'மிஷன் ஆலோசனை'}
-                </h3>
-                <p style={{ fontSize: '1.05rem', fontWeight: 650, lineHeight: 1.6, opacity: 0.95, margin: 0 }}>
-                  {language === 'en' 
-                    ? '"Arjun, today\'s focus is on social greetings. Try to complete the \'Alphabet Academy\' mission before lunch to unlock a new sticker!"'
-                    : '"அர்ஜுன், இன்றைய கவனம் சமூக வாழ்த்துக்கள் மீது உள்ளது. மதிய உணவுக்கு முன் \'அகரவரிசை அகாடமி\' மிஷனை முடிக்க முயற்சித்து புதிய ஸ்டிக்கரைத் திறக்கவும்!"'}
-                </p>
-                <div style={{ marginTop: '28px', display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: '20px' }}>
-                   <div style={{ width: '38px', height: '38px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <Star size={18} fill="white" color="white" />
-                   </div>
-                   <span style={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '0.3px' }}>
-                     {language === 'en' ? 'Reward: +100 Hero Stars' : 'வெகுமதி: +100 ஹீரோ நட்சத்திரங்கள்'}
-                   </span>
-                </div>
-             </div>
-
-             {/* Journey Roadmap Progress Timeline */}
-             <div className="bento-card" style={{ padding: '32px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '24px' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '24px', color: '#0F172A', letterSpacing: '-0.3px', marginTop: 0 }}>
-                  {language === 'en' ? 'Journey Roadmap' : 'பயண வழிகாட்டி'}
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                   {[
-                     { label: language === 'en' ? 'Morning Ritual' : 'காலை சடங்கு', done: true },
-                     { label: language === 'en' ? 'School / Therapy' : 'பள்ளி / சிகிச்சை', done: true },
-                     { label: language === 'en' ? 'Playtime Hub' : 'விளையாட்டு மையம்', done: false },
-                     { label: language === 'en' ? 'Evening Calm' : 'மாலை அமைதி', done: false }
-                   ].map((r, i) => (
-                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ 
-                          width: '10px', 
-                          height: '10px', 
-                          background: r.done ? '#10B981' : '#CBD5E1', 
-                          borderRadius: '50%',
-                          boxShadow: r.done ? '0 0 8px rgba(16, 185, 129, 0.5)' : 'none'
-                        }}></div>
-                        <span style={{ 
-                          fontWeight: 800, 
-                          color: r.done ? '#0F172A' : '#94A3B8', 
-                          fontSize: '1.05rem' 
-                        }}>
-                          {r.label}
-                        </span>
-                     </div>
-                   ))}
-                </div>
-             </div>
+             {/* User requested to remove widgets from the right sidebar */}
 
           </div>
         </div>
@@ -1415,7 +1617,7 @@ const PatientDashboard = () => {
       {
         id: 'niramaya',
         title: language === 'en' ? 'Niramaya Health Insurance' : 'நிராமயா காப்பீட்டுத் திட்டம்',
-        desc: language === 'en' ? '₹1,00,000 health insurance covering clinical therapy, hospital checkups, and diagnostics without pre-medical tests.' : 'ஆட்டிசம் கொண்ட குழந்தைகளுக்கு ₹1,00,000 வரையிலான மருத்துவ சிகிச்சை மற்றும் காப்பீட்டுத் திட்டம்.',
+        desc: language === 'en' ? '₹1,00,000 health insurance covering clinical therapy, hospital checkups, and diagnostics without pre-medical tests.' : '₹1,00,000 வரையிலான மருத்துவ சிகிச்சை மற்றும் காப்பீட்டு திட்டம்.',
         benefit: language === 'en' ? '₹1,00,000 Annual Cover' : '₹1,00,000 வருடாந்திர காப்பீடு',
         premium: language === 'en' ? '₹250 - ₹500 / year' : 'ஆண்டுக்கு ₹250 - ₹500',
         color: '#8B5CF6',
@@ -1426,7 +1628,7 @@ const PatientDashboard = () => {
         title: language === 'en' ? 'Disha Early Intervention' : 'திஷா ஆரம்பகால சிகிச்சை',
         desc: language === 'en' ? 'Early intervention, pediatric evaluation, school readiness facilities and diagnostic support for children aged 0-10 years.' : '0 முதல் 10 வயது வரை உள்ள குழந்தைகளுக்கு ஆரம்பகட்ட சிகிச்சை, மதிப்பீடு மற்றும் பள்ளி ஆயத்த பயிற்சி வழங்கும் திட்டம்.',
         benefit: language === 'en' ? 'Free Diagnostic Services' : 'இலவச ஆரம்ப சிகிச்சை',
-        premium: language === 'en' ? '100% Govt Funded' : '100% அரசு நிதியுதவி',
+        premium: language === 'en' ? '100% Govt Funded' : '100% அரசு நிதி உதவி',
         color: '#10B981',
         icon: BookOpen
       },
@@ -1434,7 +1636,6 @@ const PatientDashboard = () => {
         id: 'gyanprabha',
         title: language === 'en' ? 'Gyan Prabha Scholarship' : 'ஞான பிரபா கல்வி உதவித்தொகை',
         desc: language === 'en' ? 'Financial support for pursuing educational and professional vocational training courses at certified institutions.' : 'சான்றளிக்கப்பட்ட நிறுவனங்களில் தொழிற்பயிற்சி மற்றும் கல்வி கற்க நிதியுதவி வழங்கும் உதவித்தொகை திட்டம்.',
-        benefit: language === 'en' ? '₹1,00,000 Annual Cover' : '₹1,00,000 வருடாந்திர காப்பீடு',
         benefit: language === 'en' ? '₹1,000 / month support' : 'மாதம் ₹1,000 நிதியுதவி',
         premium: language === 'en' ? 'Direct Bank Transfer' : 'நேரடி வங்கி பரிமாற்றம்',
         color: '#F472B6',
@@ -1442,10 +1643,10 @@ const PatientDashboard = () => {
       },
       {
         id: 'udid',
-        title: language === 'en' ? 'UDID Disability ID Card' : 'UDID அடையாள அட்டை',
-        desc: language === 'en' ? 'Universal disability card for digital record tracking, healthcare benefits, travel subsidies, and state allowances.' : 'அரசு நலத்திட்டங்கள், சலுகைகள் மற்றும் மாற்றுத்திறனாளி நிதியுதவி பெற தேவையான உலகளாவிய அடையாள அட்டை.',
-        benefit: language === 'en' ? 'Lifetime Card Validity' : 'ஆயுட்கால செல்லுபடி',
-        premium: language === 'en' ? 'Free Registration' : 'இலவச பதிவு',
+      title: language === 'en' ? 'UDID Disability ID Card' : 'UDID அடையாள அட்டை',
+      desc: language === 'en' ? 'Universal disability card for digital record tracking, healthcare benefits, travel subsidies, and state allowances.' : 'அரசு நலத்திட்டங்கள், சலுகைகள் மற்றும் மாற்றுத்திறனாளி நிதியுதவி பெற தேவையான உலகளாவிய அடையாள அட்டை.',
+      benefit: language === 'en' ? 'Lifetime Card Validity' : 'ஆயுட்கால செல்லுபடி',
+      premium: language === 'en' ? 'Free Registration' : 'இலவச பதிவு',
         color: '#38BDF8',
         icon: Calendar
       }
@@ -1464,7 +1665,7 @@ const PatientDashboard = () => {
                     <Icon size={28} />
                   </div>
                   <span style={{ background: isApplied ? '#D1FAE5' : '#F1F5F9', color: isApplied ? '#065F46' : '#475569', padding: '6px 16px', borderRadius: '100px', fontWeight: 800, fontSize: '0.9rem' }}>
-                    {isApplied ? (language === 'en' ? '● Active Benefit' : '● செயல்பாட்டில் உள்ளது') : (language === 'en' ? 'Not Applied' : 'விண்ணப்பிக்கவில்லை')}
+                  {isApplied ? (language === 'en' ? '● Active Benefit' : '● செயல்பாட்டில் உள்ளது') : (language === 'en' ? 'Not Applied' : 'விண்ணப்பிக்கவில்லை')}
                   </span>
                 </div>
 
@@ -1473,11 +1674,11 @@ const PatientDashboard = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', padding: '16px', background: 'var(--slate-50)', borderRadius: '12px', marginBottom: '24px' }}>
                   <div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--slate-400)', fontWeight: 800, textTransform: 'uppercase' }}>{language === 'en' ? 'CORE BENEFIT' : 'முக்கிய பலன்'}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--slate-400)', fontWeight: 800, textTransform: 'uppercase' }}>{language === 'en' ? 'CORE BENEFIT' : 'முக்கிய பலன்'}</span>
                     <p style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--slate-800)', margin: '4px 0 0' }}>{s.benefit}</p>
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--slate-400)', fontWeight: 800, textTransform: 'uppercase' }}>{language === 'en' ? 'PREMIUM / COST' : 'காப்பீட்டு கட்டணம்'}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--slate-400)', fontWeight: 800, textTransform: 'uppercase' }}>{language === 'en' ? 'PREMIUM / COST' : 'காப்பீட்டு கட்டணம்'}</span>
                     <p style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--slate-800)', margin: '4px 0 0' }}>{s.premium}</p>
                   </div>
                 </div>
@@ -1495,7 +1696,7 @@ const PatientDashboard = () => {
                     cursor: isApplied ? 'default' : 'pointer'
                   }}
                 >
-                  {isApplied ? (language === 'en' ? '✓ CLAIMED & APPLIED (+50 ⭐)' : '✓ விண்ணப்பிக்கப்பட்டது (+50 ⭐)') : (language === 'en' ? 'APPLY NOW ⮕' : 'இப்போதே விண்ணப்பி ⮕')}
+                  {isApplied ? (language === 'en' ? '✓ CLAIMED & APPLIED (+50 ⭐)' : '✓ விண்ணப்பிக்கப்பட்டது (+50 ⭐)') : (language === 'en' ? 'APPLY NOW ➔' : 'இப்போதே விண்ணப்பி ➔')}
                 </button>
               </div>
             );
@@ -1505,212 +1706,272 @@ const PatientDashboard = () => {
     );
   };
 
-  const renderProfile = () => {
-    const frameGradients = {
-      explorer: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-      ranger: 'linear-gradient(135deg, #10B981, #059669)',
-      guardian: 'linear-gradient(135deg, #06B6D4, #3B82F6)'
-    };
+const PatientProfileTab = ({ user, language, activeFrame = 'explorer', childLevel = 1, navigate }) => {
+  const [profile, setProfile] = React.useState(null);
+  const [editing, setEditing] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [saveMsg, setSaveMsg] = React.useState('');
+  const [imgPreview, setImgPreview] = React.useState(null);
+  const [form, setForm] = React.useState({
+    childName: '', age: '', clinic: '', parentName: '', contact: '', imageUrl: ''
+  });
 
-    const frameNames = {
-      explorer: language === 'en' ? 'Space Explorer' : 'விண்வெளி ஆய்வாளர்',
-      ranger: language === 'en' ? 'Jungle Ranger' : 'காட்டு பாதுகாவலர்',
-      guardian: language === 'en' ? 'Ocean Guardian' : 'கடல் காவலர்'
-    };
+  React.useEffect(() => {
+    const userId = user?._id || user?.id;
+    if (!userId) return;
+    fetch('/api/patient/profile/' + userId)
+      .then(r => r.json())
+      .then(data => {
+        if (data && !data.message) {
+          setProfile(data);
+          setForm({
+            childName: data.childName || '',
+            age: data.age || '',
+            clinic: data.clinic || '',
+            parentName: data.parentName || '',
+            contact: data.contact || '',
+            imageUrl: data.imageUrl || '',
+          });
+          setImgPreview(data.imageUrl || null);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
-    const skills = [
-      { name: language === 'en' ? 'Communication Skills' : 'தொடர்பு திறன்', value: 90, grade: 'A', icon: MessageCircle, color: '#3B82F6' },
-      { name: language === 'en' ? 'Cognitive Skills' : 'அறிவாற்றல் திறன்', value: 80, grade: 'B', icon: BookOpen, color: '#8B5CF6' },
-      { name: language === 'en' ? 'Sensory Adaptation' : 'உணர்வுசார் தழுவல்', value: 75, grade: 'B', icon: Sparkles, color: '#10B981' },
-      { name: language === 'en' ? 'Social Interaction' : 'சமூக தொடர்பு', value: 60, grade: 'C', icon: Smile, color: '#F59E0B' }
-    ];
-
-    const records = [
-      { name: language === 'en' ? 'First Diagnostic Report' : 'முதல் கண்டறிதல் அறிக்கை', date: '12/06/2024', size: '2.4 MB' },
-      { name: language === 'en' ? 'Sensory Progress Log' : 'உணர்வுசார் முன்னேற்றப் பதிவு', date: '04/05/2026', size: '1.8 MB' }
-    ];
-
-    return (
-      <div className="animate-slide-up" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-        
-        {/* Top Row: Passport Card & Credentials (Equal Height Grid) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '32px', alignItems: 'stretch' }}>
-          
-          {/* Left Column: Hero Passport Card */}
-          <div className="bento-card" style={{ padding: '40px 32px', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '28px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-            
-            {/* Ambient Tech Grid Overlay Decor */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', opacity: 0.03, pointerEvents: 'none', background: 'radial-gradient(circle, #FFF 1px, transparent 1px) 0 0/20px 20px' }}></div>
-            
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              {/* Premium Circular Holographic Avatar Frame */}
-              <div style={{ position: 'relative', width: '150px', height: '150px', margin: '0 auto 24px' }}>
-                <div style={{ position: 'absolute', inset: -8, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', borderRadius: '54px', opacity: 0.22, filter: 'blur(8px)' }}></div>
-                <div style={{ position: 'absolute', inset: -3, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', borderRadius: '50px', padding: '3px' }}>
-                  <div style={{ width: '100%', height: '100%', background: '#0F172A', borderRadius: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA' }}>
-                    <User size={68} strokeWidth={1.5} />
-                  </div>
-                </div>
-                <div style={{ position: 'absolute', bottom: -4, right: -4, background: '#10B981', color: 'white', padding: '5px 14px', borderRadius: '100px', fontWeight: 900, fontSize: '0.8rem', border: '3px solid #0F172A', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>VERIFIED</div>
-              </div>
-
-              {/* Title & Level Info */}
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Arjun Ramakrishnan</h3>
-              <p style={{ fontSize: '1rem', color: '#64748B', fontWeight: 800, margin: '0 0 16px', letterSpacing: '0.8px' }}>REF: #ATH-29401</p>
-              
-              <span style={{ display: 'inline-block', background: 'rgba(59, 130, 246, 0.1)', color: '#60A5FA', padding: '6px 20px', borderRadius: '100px', fontWeight: 900, fontSize: '0.9rem', border: '1px solid rgba(59, 130, 246, 0.2)', marginBottom: '24px' }}>
-                LEVEL {childLevel} EXPLORER
-              </span>
-
-              {/* Rank Progress Bar */}
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, color: '#94A3B8', marginBottom: '8px' }}>
-                  <span>RANK PROGRESS</span>
-                  <span style={{ color: '#60A5FA' }}>170 / 250 XP</span>
-                </div>
-                <div style={{ width: '100%', height: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
-                  <div style={{ width: '68%', height: '100%', background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)', borderRadius: '10px', transition: 'all 0.4s ease' }}></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Premium Tech Barcode & Secure Token Footer */}
-            <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-              <div style={{ textAlign: 'left' }}>
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SECURE TRANSMISSION</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#94A3B8', fontFamily: 'monospace' }}>AURA AUTH // CL-940</span>
-              </div>
-              {/* Clinical Barcode Graphics */}
-              <div style={{ display: 'flex', gap: '3px', height: '24px', opacity: 0.4, alignItems: 'flex-end' }}>
-                {[4, 8, 2, 7, 5, 1, 9, 3, 6, 4].map((h, i) => (
-                  <div key={i} style={{ width: i % 3 === 0 ? '3px' : '1.5px', height: `${h * 10}%`, background: 'white', borderRadius: '1px' }}></div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column: Identity Grid Section */}
-          <div className="bento-card" style={{ padding: '40px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '28px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--slate-900)', marginBottom: '32px' }}>
-              {language === 'en' ? 'Guardian & Clinical Credentials' : 'பாதுகாவலர் & மருத்துவ சான்றிதழ்கள்'}
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              {[
-                { label: language === 'en' ? 'Legal Full Name' : 'சட்டப்பூர்வ முழு பெயர்', value: 'Arjun Ramakrishnan', icon: User, color: 'var(--p-500)' },
-                { label: language === 'en' ? 'Child Age (DOB)' : 'வயது (பிறந்த தேதி)', value: '6 Years Old (12/05/2018)', icon: Calendar, color: 'var(--s-500)' },
-                { label: language === 'en' ? 'Primary Caregiver' : 'முதன்மை பராமரிப்பாளர்', value: 'Rahul Ramakrishnan', icon: Heart, color: '#EF4444' },
-                { label: language === 'en' ? 'Assigned Specialist' : 'நியமிக்கப்பட்ட நிபுணர்', value: 'Dr. Smitha (Apollo Clinical)', icon: ShieldCheck, color: '#10B981' }
-              ].map((info, idx) => (
-                <div key={idx} style={{ padding: '24px', background: 'var(--slate-50)', border: '1px solid var(--slate-100)', borderRadius: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', background: `${info.color}15`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: info.color }}>
-                      <info.icon size={20} />
-                    </div>
-                    <span style={{ fontWeight: 800, color: 'var(--slate-400)', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
-                  </div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--slate-900)', paddingLeft: '48px' }}>{info.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Row: Skills Metrics & Documents Vault (Equal Height Grid) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '32px', alignItems: 'stretch' }}>
-          
-          {/* Left Column: Skill Metrics Panel */}
-          <div className="bento-card" style={{ padding: '40px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '28px' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--slate-900)', marginBottom: '32px' }}>
-              {language === 'en' ? 'Active Skill Progression Metrics' : 'செயலில் உள்ள திறன் முன்னேற்ற அளவீடுகள்'}
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {skills.map((skill, index) => {
-                const SkillIcon = skill.icon;
-                return (
-                  <div key={index} style={{ padding: '16px 20px', background: 'var(--slate-50)', borderRadius: '16px', border: '1px solid var(--slate-100)', display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '20px', alignItems: 'center' }}>
-                    <div style={{ width: '44px', height: '44px', background: `${skill.color}15`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: skill.color }}>
-                      <SkillIcon size={22} />
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontWeight: 800, color: 'var(--slate-800)', fontSize: '1.05rem' }}>{skill.name}</span>
-                        <span style={{ fontWeight: 800, color: skill.color, fontSize: '1rem' }}>{skill.value}% Mastery</span>
-                      </div>
-                      <div style={{ width: '100%', height: '10px', background: 'var(--slate-200)', borderRadius: '10px', overflow: 'hidden' }}>
-                        <div style={{ width: `${skill.value}%`, height: '100%', background: skill.color, borderRadius: '10px' }}></div>
-                      </div>
-                    </div>
-                    <div style={{ background: `${skill.color}15`, color: skill.color, fontWeight: 900, fontSize: '1.2rem', width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${skill.color}` }}>
-                      {skill.grade}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right Column: Documents Vault */}
-          <div className="bento-card" style={{ padding: '40px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--slate-900)', marginBottom: '32px' }}>
-                {language === 'en' ? 'Medical & Progress Reports' : 'மருத்துவ & முன்னேற்ற அறிக்கைகள்'}
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {records.map((rec, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', border: '1px solid var(--slate-150)', borderRadius: '16px', background: 'var(--slate-50)' }}>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--slate-800)' }}>{rec.name}</h4>
-                      <span style={{ fontSize: '0.9rem', color: 'var(--slate-400)', fontWeight: 800, display: 'block', marginTop: '4px' }}>{rec.date} • {rec.size}</span>
-                    </div>
-                    <button 
-                      onClick={() => navigate('/report')}
-                      className="btn-neon" 
-                      style={{ 
-                        background: 'white', 
-                        color: 'var(--slate-700)', 
-                        border: '1px solid var(--slate-200)', 
-                        padding: '8px 20px', 
-                        fontSize: '0.95rem', 
-                        fontWeight: 800,
-                        boxShadow: 'none'
-                      }}
-                    >
-                      VIEW RECORD
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Global Export Section */}
-        <div style={{ padding: '40px 48px', background: 'var(--slate-900)', borderRadius: '28px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 20px 40px rgba(15,23,42,0.15)' }}>
-           <div>
-             <h4 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
-               {language === 'en' ? 'Comprehensive Clinical PDF Export' : 'விரிவான மருத்துவ PDF ஏற்றுமதி'}
-             </h4>
-             <p style={{ margin: '8px 0 0', opacity: 0.7, fontWeight: 600, fontSize: '1.1rem', lineHeight: 1.5 }}>
-               {language === 'en' ? 'Compile and download the absolute history, game scoring progression, and specialist signoffs.' : 'முழுமையான வரலாறு, விளையாட்டின் மதிப்பெண் முன்னேற்றம் மற்றும் நிபுணர்களின் ஒப்புதல்களைப் பதிவிறக்கவும்.'}
-             </p>
-           </div>
-           <button onClick={() => navigate('/report')} className="btn-neon" style={{ background: 'white', color: 'var(--slate-900)', padding: '18px 44px', fontSize: '1.15rem', fontWeight: 900 }}>
-             {language === 'en' ? 'GENERATE FULL REPORT' : 'முழு அறிக்கையை உருவாக்கு'}
-           </button>
-        </div>
-
-      </div>
-    );
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveMsg('');
+    const userId = user?._id || user?.id;
+    try {
+      const res = await fetch('/api/patient/profile/' + userId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProfile(data);
+        setEditing(false);
+        setSaveMsg('Profile saved successfully!');
+        setTimeout(() => setSaveMsg(''), 3000);
+      } else {
+        setSaveMsg('Error: ' + (data.message || 'Save failed'));
+      }
+    } catch (e) {
+      setSaveMsg('Network error. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const frameGradients = {
+    explorer: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+    ranger: 'linear-gradient(135deg, #10B981, #059669)',
+    guardian: 'linear-gradient(135deg, #06B6D4, #3B82F6)'
+  };
+  const frameNames = {
+    explorer: 'Space Explorer',
+    ranger: 'Jungle Ranger',
+    guardian: 'Ocean Guardian'
+  };
+  const skills = [
+    { name: 'Communication Skills', value: 90, grade: 'A', icon: MessageCircle, color: '#3B82F6' },
+    { name: 'Cognitive Skills',     value: 80, grade: 'B', icon: BookOpen,      color: '#8B5CF6' },
+    { name: 'Sensory Adaptation',   value: 75, grade: 'B', icon: Sparkles,      color: '#10B981' },
+    { name: 'Social Interaction',   value: 60, grade: 'C', icon: Smile,         color: '#F59E0B' }
+  ];
+  const inputStyle = {
+    width: '100%', padding: '14px 16px', borderRadius: '12px',
+    border: '2px solid #E2E8F0', background: '#F8FAFC',
+    fontWeight: 600, fontSize: '0.95rem', outline: 'none',
+    transition: 'all 0.3s', color: '#0F172A', boxSizing: 'border-box'
+  };
+
+  // Use profile from DB if loaded, else fall back to user session data
+  const d = profile || {
+    childName: user?.name || 'Hero Child',
+    age: '',
+    clinic: '',
+    parentName: '',
+    contact: '',
+    user: { email: user?.email || '' }
+  };
+
+  return (
+    <div className="animate-slide-up" style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '40px' }}>
+
+      {saveMsg && (
+        <div style={{
+          padding: '16px 24px', borderRadius: '14px',
+          background: saveMsg.startsWith('Profile saved') ? '#F0FDF4' : '#FEF2F2',
+          color: saveMsg.startsWith('Profile saved') ? '#16A34A' : '#DC2626',
+          fontWeight: 700, fontSize: '1rem',
+          border: '1px solid ' + (saveMsg.startsWith('Profile saved') ? '#86EFAC' : '#FCA5A5')
+        }}>
+          {saveMsg.startsWith('Profile saved') ? '✅ ' : '❌ '}{saveMsg}
+        </div>
+      )}
+
+      {/* Hero Passport Card */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '420px', padding: '40px 32px', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', borderRadius: '28px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', opacity: 0.03, pointerEvents: 'none', background: 'radial-gradient(circle, #FFF 1px, transparent 1px) 0 0/20px 20px' }}></div>
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <div style={{ position: 'relative', width: '150px', height: '150px', margin: '0 auto 24px' }}>
+              <div style={{ position: 'absolute', inset: -3, background: frameGradients[activeFrame] || frameGradients.explorer, borderRadius: '50px', padding: '3px' }}>
+                <div style={{ width: '100%', height: '100%', background: '#0F172A', borderRadius: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {imgPreview
+                    ? <img src={imgPreview} alt="child" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '44px' }} />
+                    : <User size={68} strokeWidth={1.5} color="#60A5FA" />
+                  }
+                </div>
+              </div>
+              <div style={{ position: 'absolute', bottom: -4, right: -4, background: '#10B981', color: 'white', padding: '5px 14px', borderRadius: '100px', fontWeight: 900, fontSize: '0.8rem', border: '3px solid #0F172A' }}>
+                {profile ? 'VERIFIED' : 'ACTIVE'}
+              </div>
+            </div>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px' }}>{d.childName}</h3>
+            <p style={{ fontSize: '0.9rem', color: '#94A3B8', fontWeight: 600, margin: '0 0 4px' }}>
+              {d.age ? 'Age: ' + d.age + ' yrs' : ''}{d.age && d.clinic ? '  |  ' : ''}{d.clinic || ''}
+            </p>
+            <p style={{ fontSize: '0.85rem', color: '#94A3B8', fontWeight: 600, margin: '0 0 16px' }}>
+              {d.parentName ? 'Parent: ' + d.parentName : ''}
+            </p>
+            <span style={{ display: 'inline-block', background: 'rgba(59,130,246,0.15)', color: '#60A5FA', padding: '6px 20px', borderRadius: '100px', fontWeight: 900, fontSize: '0.9rem', border: '1px solid rgba(59,130,246,0.3)', marginBottom: '20px' }}>
+              LEVEL {childLevel} {(frameNames[activeFrame] || 'SPACE EXPLORER').toUpperCase()}
+            </span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: '#94A3B8', marginBottom: '8px' }}>
+                <span>RANK PROGRESS</span><span style={{ color: '#60A5FA' }}>170 / 250 XP</span>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', overflow: 'hidden' }}>
+                <div style={{ width: '68%', height: '100%', background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)', borderRadius: '10px' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Data / Edit Panel */}
+      <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '28px', padding: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <ShieldCheck color="#10B981" size={24} />
+            Guardian & Clinical Credentials
+          </h2>
+          {!editing
+            ? <button onClick={() => { setForm({ childName: d.childName || '', age: d.age || '', clinic: d.clinic || '', parentName: d.parentName || '', contact: d.contact || '', imageUrl: d.imageUrl || imgPreview || '' }); setEditing(true); }} style={{ padding: '10px 24px', borderRadius: '12px', background: '#F5F3FF', color: '#7C3AED', border: '1.5px solid #DDD6FE', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
+                ✏️ Edit Profile
+              </button>
+            : <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={() => { setEditing(false); setSaveMsg(''); }} style={{ padding: '10px 20px', borderRadius: '12px', background: '#F1F5F9', color: '#64748B', border: '1px solid #E2E8F0', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={handleSave} disabled={saving} style={{ padding: '10px 24px', borderRadius: '12px', background: '#7C3AED', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+                  {saving ? 'Saving...' : '💾 Save Changes'}
+                </button>
+              </div>
+          }
+        </div>
+
+        {editing ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            {[
+              { label: "Child's Full Name", key: 'childName' },
+              { label: 'Age (years)', key: 'age', type: 'number' },
+              { label: 'Parent / Guardian Name', key: 'parentName' },
+              { label: 'Contact Number', key: 'contact' },
+              { label: 'Clinic / Hospital', key: 'clinic' },
+              { label: 'Profile Image URL', key: 'imageUrl' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ display: 'block', fontWeight: 700, color: '#475569', fontSize: '0.8rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{f.label}</label>
+                <input
+                  type={f.type || 'text'}
+                  value={form[f.key] || ''}
+                  onChange={e => { setForm(p => ({ ...p, [f.key]: e.target.value })); if (f.key === 'imageUrl') setImgPreview(e.target.value); }}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = '#7C3AED'}
+                  onBlur={e => e.target.style.borderColor = '#E2E8F0'}
+                  placeholder={'Enter ' + f.label}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            {[
+              { label: 'Child Full Name',    value: d.childName,                           icon: User,       color: '#7C3AED' },
+              { label: 'Age',               value: d.age ? d.age + ' years' : '—',         icon: Calendar,   color: '#10B981' },
+              { label: 'Primary Caregiver', value: d.parentName || '—',                   icon: Heart,      color: '#EF4444' },
+              { label: 'Contact',           value: d.contact || '—',                       icon: Phone,      color: '#F59E0B' },
+              { label: 'Clinic / Hospital', value: d.clinic || '—',                        icon: Building,   color: '#3B82F6' },
+              { label: 'Email',             value: d.user?.email || user?.email || '—',    icon: Mail,       color: '#0D9488' },
+            ].map((info, i) => (
+              <div key={i} style={{ padding: '20px 24px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '32px', height: '32px', background: info.color + '18', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: info.color, flexShrink: 0 }}>
+                    <info.icon size={16} />
+                  </div>
+                  <span style={{ fontWeight: 700, color: '#94A3B8', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{info.label}</span>
+                </div>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', paddingLeft: '42px', wordBreak: 'break-word' }}>{info.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Skill Metrics */}
+      <div style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '28px', padding: '40px' }}>
+        <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0F172A', marginBottom: '28px', marginTop: 0 }}>
+          Active Skill Progression Metrics
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {skills.map((skill, index) => {
+            const SkillIcon = skill.icon;
+            return (
+              <div key={index} style={{ padding: '16px 20px', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #E2E8F0', display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '20px', alignItems: 'center' }}>
+                <div style={{ width: '44px', height: '44px', background: skill.color + '18', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: skill.color, flexShrink: 0 }}>
+                  <SkillIcon size={22} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+                    <span style={{ fontWeight: 800, color: '#1E293B', fontSize: '0.95rem' }}>{skill.name}</span>
+                    <span style={{ fontWeight: 800, color: skill.color, fontSize: '0.9rem' }}>{skill.value}% Mastery</span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: '#E2E8F0', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ width: skill.value + '%', height: '100%', background: skill.color, borderRadius: '10px', transition: 'width 1s ease' }}></div>
+                  </div>
+                </div>
+                <div style={{ background: skill.color + '18', color: skill.color, fontWeight: 900, fontSize: '1rem', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid ' + skill.color, flexShrink: 0 }}>{skill.grade}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Generate Report CTA */}
+      <div style={{ padding: '40px', background: '#0F172A', borderRadius: '28px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}>
+        <div>
+          <h4 style={{ margin: '0 0 8px', fontSize: '1.4rem', fontWeight: 900 }}>Comprehensive Clinical PDF Export</h4>
+          <p style={{ margin: 0, opacity: 0.6, fontWeight: 500, fontSize: '0.95rem' }}>Download full history, game scores & specialist sign-offs.</p>
+        </div>
+        <button onClick={() => navigate && navigate('/report')} style={{ background: 'white', color: '#0F172A', padding: '16px 32px', fontSize: '1rem', fontWeight: 900, borderRadius: '16px', cursor: 'pointer', whiteSpace: 'nowrap', border: 'none' }}>
+          GENERATE REPORT
+        </button>
+      </div>
+
+    </div>
+  );
+};
+
+
 
   const renderChat = () => (
     <div className="bento-card animate-slide-up" style={{ display: 'flex', flexDirection: 'column', height: '70vh', padding: 0, overflow: 'hidden', border: '1px solid #E2E8F0', borderRadius: '16px', background: 'white' }}>
       <div style={{ padding: '20px 32px', borderBottom: '1px solid var(--slate-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: '48px', height: '48px', background: 'var(--p-100)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--p-500)' }}><User size={24} /></div>
-          <div><h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>Dr. Smitha</h3><p style={{ color: 'var(--s-500)', fontWeight: 800, margin: 0, fontSize: '0.9rem' }}>● Online & Helping</p></div>
+            <div><h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>Dr. Smitha</h3><p style={{ color: 'var(--s-500)', fontWeight: 800, margin: 0, fontSize: '0.9rem' }}>● Online & Helping</p></div>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
            <button className="btn-neon" style={{ background: 'var(--slate-100)', color: 'var(--slate-900)', boxShadow: 'none', padding: '8px 16px' }}><Phone size={18} /></button>
@@ -1733,7 +1994,7 @@ const PatientDashboard = () => {
   );
 
   return (
-    <div onMouseMove={handleMouseMove} style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative' }}>
+    <div onMouseMove={handleMouseMove} className="dashboard-layout" style={{ background: '#F8FAFC', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative' }}>
       
       <style>{`
         @keyframes sparkle-pop {
@@ -1769,30 +2030,39 @@ const PatientDashboard = () => {
       {renderGameOverlay()}
       
       {/* Strict Enterprise Sidebar */}
-      <aside style={{ width: '260px', background: 'white', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 10 }}>
+      <aside className={`dashboard-sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`} style={{ background: 'white', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '24px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ background: '#2563EB', padding: '8px', borderRadius: '8px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Rocket color="white" size={20} /></div>
           <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>AURA Child</h1>
         </div>
+        {user && (
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, #4F46E5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: '1rem' }}>{user.name?.charAt(0).toUpperCase()}</div>
+            <div>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>{user.name}</p>
+              <p style={{ margin: 0, fontSize: '0.72rem', color: '#94A3B8', fontWeight: 600 }}>Patient</p>
+            </div>
+          </div>
+        )}
 
         <nav style={{ padding: '20px 12px', display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
           <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', paddingLeft: '10px' }}>Hero Station</div>
           {(language === 'en' ? [
             { id: 'dashboard', icon: LayoutDashboard, label: 'My Home' },
-            { id: 'planner', icon: Calendar, label: 'Daily Missions' },
+            { id: 'planner', icon: Calendar, label: 'Daily Activities' },
             { id: 'schemes', icon: ShieldCheck, label: 'Govt Schemes' },
             { id: 'chat', icon: MessageCircle, label: 'Doctor Chat' },
             { id: 'profile', icon: User, label: 'My Profile' }
           ] : [
-            { id: 'dashboard', icon: LayoutDashboard, label: 'என் வீடு' },
-            { id: 'planner', icon: Calendar, label: 'தினசரி பணிகள்' },
+            { id: 'dashboard', icon: LayoutDashboard, label: 'என் முகப்பு' },
+            { id: 'planner', icon: Calendar, label: 'தினசரி செயல்பாடுகள்' },
             { id: 'schemes', icon: ShieldCheck, label: 'அரசு திட்டங்கள்' },
             { id: 'chat', icon: MessageCircle, label: 'மருத்துவர் அரட்டை' },
-            { id: 'profile', icon: User, label: 'எனது சுயவிவரம்' }
+            { id: 'profile', icon: User, label: 'என் சுயவிவரம்' }
           ]).map(tab => (
             <div 
               key={tab.id} 
-              onClick={() => setCurrentTab(tab.id)} 
+              onClick={() => { setCurrentTab(tab.id); setIsSidebarOpen(false); }} 
               style={{ 
                 display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
                 background: currentTab === tab.id ? '#EFF6FF' : 'transparent',
@@ -1810,7 +2080,7 @@ const PatientDashboard = () => {
 
         <div style={{ padding: '20px', borderTop: '1px solid #E2E8F0' }}>
           <button 
-            onClick={() => navigate('/')} 
+            onClick={handleLogout}
             style={{ 
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               background: '#FEE2E2', color: '#EF4444', padding: '10px', borderRadius: '8px',
@@ -1823,17 +2093,29 @@ const PatientDashboard = () => {
         </div>
       </aside>
 
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="sidebar-overlay"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40 }}
+        />
+      )}
+
       {/* Main Content Area */}
-      <main style={{ flex: 1, marginLeft: '260px', minHeight: '100vh', background: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+      <main className="dashboard-main" style={{ background: '#F8FAFC' }}>
         {/* Header */}
         <header style={{ height: '72px', borderBottom: '1px solid #E2E8F0', background: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px', position: 'sticky', top: 0, zIndex: 5 }}>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="mobile-header-toggle" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.3px' }}>
-              {currentTab === 'dashboard' && (language === 'en' ? 'Welcome, Arjun!' : 'வரவேற்கிறோம், அர்ஜுன்!')}
-              {currentTab === 'planner' && (language === 'en' ? 'Daily Growth Missions' : 'தினசரி வளர்ச்சிப் பணிகள்')}
-              {currentTab === 'schemes' && (language === 'en' ? 'Government Support Schemes' : 'அரசு நலத்திட்டங்கள்')}
-              {currentTab === 'chat' && (language === 'en' ? 'Doctor Consult' : 'மருத்துவர் அரட்டை')}
-              {currentTab === 'profile' && (language === 'en' ? 'Super Hero Profile' : 'சுயவிவரம்')}
+          {currentTab === 'dashboard' && (language === 'en' ? `Welcome, ${user?.name || 'Hero'}!` : `வரவேற்கிறோம், ${user?.name || 'ஹீரோ'}!`)}
+          {currentTab === 'planner' && (language === 'en' ? 'Daily Growth Activities' : 'தினசரி வளர்ச்சிச் செயல்பாடுகள்')}
+          {currentTab === 'schemes' && (language === 'en' ? 'Government Support Schemes' : 'அரசு நலத்திட்டங்கள்')}
+          {currentTab === 'chat' && (language === 'en' ? 'Doctor Consult' : 'மருத்துவர் அரட்டை')}
+          {currentTab === 'profile' && (language === 'en' ? 'Super Hero Profile' : 'சுயவிவரம்')}
             </h2>
           </div>
 
@@ -1851,8 +2133,8 @@ const PatientDashboard = () => {
           {currentTab === 'dashboard' && renderDashboard()}
           {currentTab === 'planner' && renderPlanner()}
           {currentTab === 'schemes' && renderSchemes()}
-          {currentTab === 'profile' && renderProfile()}
-          {currentTab === 'chat' && renderChat()}
+          {currentTab === 'profile' && <PatientProfileTab user={user} language={language} activeFrame={activeFrame} childLevel={childLevel} navigate={navigate} />}
+          {currentTab === 'chat' && <PatientChatTab user={user} />}
         </div>
       </main>
     </div>

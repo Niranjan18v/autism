@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { 
   Sparkles, Heart, Star, Shield, Play, Globe, 
   ArrowRight, CheckCircle2, Layout, Zap, Users, Activity,
-  Quote, Mail, Phone, Share2, ChevronRight, ZapOff, ShieldCheck, Award, GraduationCap, Building
+  Quote, Mail, Phone, Share2, ChevronRight, ZapOff, ShieldCheck, Award, GraduationCap, Building,
+  MessageCircle, Smile, BookOpen, Volume2, Stethoscope, ArrowUpRight, Compass, Check
 } from 'lucide-react'
 
 const translations = {
@@ -70,7 +71,40 @@ function LandingPage() {
   const navigate = useNavigate();
   const [lang, setLang] = useState('en')
   const [scrolled, setScrolled] = useState(false)
+  const [activeSandboxTab, setActiveSandboxTab] = useState('panda')
+  const [sandboxFeedback, setSandboxFeedback] = useState('Click any button to hear speech!')
+  const [activeEmotionCard, setActiveEmotionCard] = useState('happy')
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const t = translations[lang]
+
+  const speakSandboxWord = (text, taText, mood = 'happy') => {
+    setSandboxFeedback(lang === 'ta' ? (taText || text) : text)
+    setIsSpeaking(true)
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance(lang === 'ta' ? (taText || text) : text)
+      u.lang = lang === 'ta' ? 'ta-IN' : 'en-US'
+      u.rate = 0.95
+      u.onend = () => setIsSpeaking(false)
+      u.onerror = () => setIsSpeaking(false)
+      window.speechSynthesis.speak(u)
+    } else {
+      setTimeout(() => setIsSpeaking(false), 1200)
+    }
+  }
+
+  const handleDirectPortalLaunch = (role) => {
+    if (role === 'patient') {
+      localStorage.setItem('user', JSON.stringify({ _id: '6a7770f0f46df88d9504cde0', name: 'Arjun Kumar', email: 'arjun@test.com', role: 'patient' }))
+      navigate('/dashboard/patient')
+    } else if (role === 'doctor') {
+      localStorage.setItem('user', JSON.stringify({ _id: '6a777105f46df88d9504cde1', name: 'Dr. Priya Raman', email: 'doctor@aura.com', role: 'doctor' }))
+      navigate('/dashboard/doctor')
+    } else if (role === 'admin') {
+      localStorage.setItem('user', JSON.stringify({ _id: '6a777105f46df88d9504cde2', name: 'System Admin', email: 'admin@aura.com', role: 'admin' }))
+      navigate('/dashboard/admin')
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -280,6 +314,327 @@ function LandingPage() {
                ))}
             </div>
          </div>
+      </section>
+
+      {/* Interactive Clinical Sandbox Demo */}
+      <section style={{ padding: '80px 40px', background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)', borderBottom: '1px solid #E2E8F0' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <div className="badge-pill" style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', marginBottom: '16px' }}>
+              <Sparkles size={16} /> {lang === 'en' ? 'LIVE INTERACTIVE PREVIEW' : 'நேரடி ஊடாடும் முன்னோட்டம்'}
+            </div>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-1.5px', margin: '0 0 12px 0' }}>
+              {lang === 'en' ? 'Experience AURA in Action' : 'ஆராவின் நேரடி அனுபவம்'}
+            </h2>
+            <p style={{ fontSize: '1.25rem', color: '#64748B', fontWeight: 600, maxWidth: '750px', margin: '0 auto' }}>
+              {lang === 'en' 
+                ? 'Try our sensory-safe interactive games directly in your browser. Speech, emotions, and vocabulary crafted for calm learning.'
+                : 'சென்சரி-சேஃப் விளையாட்டுகளை உங்கள் உலாவியிலேயே நேரடியாக முயற்சிக்கவும்.'}
+            </p>
+          </div>
+
+          {/* Sandbox Interactive Card */}
+          <div className="glass-panel" style={{ borderRadius: '36px', padding: '40px 48px', border: '1px solid rgba(226, 232, 240, 0.9)', boxShadow: '0 25px 60px rgba(15, 23, 42, 0.05)' }}>
+            
+            {/* Tabs Header */}
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '40px', flexWrap: 'wrap' }}>
+              {[
+                { id: 'panda', icon: MessageCircle, label: lang === 'en' ? '🐼 Talk with Panda' : '🐼 பாண்டாவுடன் பேசுங்கள்', color: '#EC4899', bg: '#FDF2F8' },
+                { id: 'emotion', icon: Smile, label: lang === 'en' ? '🎭 Emotion Mirror' : '🎭 உணர்ச்சி கண்ணாடி', color: '#10B981', bg: '#ECFDF5' },
+                { id: 'academy', icon: BookOpen, label: lang === 'en' ? '🏫 Hero Academy' : '🏫 கல்வி அகாடமி', color: '#6366F1', bg: '#EEF2FF' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveSandboxTab(tab.id); setSandboxFeedback('Click any item to interact!'); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '14px 28px',
+                    borderRadius: '100px',
+                    border: activeSandboxTab === tab.id ? `2px solid ${tab.color}` : '1.5px solid #E2E8F0',
+                    background: activeSandboxTab === tab.id ? tab.bg : 'white',
+                    color: activeSandboxTab === tab.id ? tab.color : '#64748B',
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    cursor: 'pointer',
+                    boxShadow: activeSandboxTab === tab.id ? `0 8px 20px ${tab.color}25` : '0 2px 6px rgba(0,0,0,0.02)',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  <tab.icon size={20} />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Tab 1: Panda Communication */}
+            {activeSandboxTab === 'panda' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '48px', alignItems: 'center' }}>
+                <div style={{ textAlign: 'center', padding: '30px', background: 'linear-gradient(135deg, #FFF1F2 0%, #FDF2F8 100%)', borderRadius: '30px', border: '1.5px solid #FCE7F3' }}>
+                  <div style={{ fontSize: '7rem', lineHeight: 1, marginBottom: '16px', display: 'inline-block' }} className={isSpeaking ? 'anim-pulse' : 'anim-float'}>
+                    🐼
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '1.4rem', fontWeight: 900, color: '#0F172A' }}>Panda Buddy</h4>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '100px', background: isSpeaking ? '#DC2626' : '#10B981', color: 'white', fontWeight: 800, fontSize: '0.8rem' }}>
+                    <Volume2 size={14} /> {isSpeaking ? 'Speaking Now...' : 'Ready to Listen'}
+                  </div>
+                  <div style={{ marginTop: '16px', padding: '12px 18px', background: 'white', borderRadius: '16px', border: '1px solid #F1F5F9', fontWeight: 700, color: '#475569', fontSize: '0.95rem' }}>
+                    "{sandboxFeedback}"
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ margin: '0 0 12px', fontSize: '1.6rem', fontWeight: 900, color: '#0F172A' }}>
+                    {lang === 'en' ? 'Tap an object to practice speech with Panda:' : 'பாண்டாவுடன் பேச ஒரு பொருளைத் தொடவும்:'}
+                  </h3>
+                  <p style={{ color: '#64748B', fontWeight: 600, fontSize: '1rem', margin: '0 0 24px' }}>
+                    {lang === 'en' ? 'Synthesized speech gently repeats the word, modeling conversational clarity.' : 'தெளிவான குரல் வழிகாட்டுதல் மூலம் பேசப் பழகுங்கள்.'}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                    {[
+                      { icon: '🍎', word: 'Apple', taWord: 'ஆப்பிள்', cue: 'A sweet red apple!' },
+                      { icon: '💧', word: 'Water', taWord: 'தண்ணீர்', cue: 'Fresh cool water!' },
+                      { icon: '🧸', word: 'Teddy Bear', taWord: 'கரடி பொம்மை', cue: 'My soft cuddly toy!' },
+                      { icon: '👋', word: 'Hello Panda!', taWord: 'வணக்கம் பாண்டா!', cue: 'Happy to see you!' }
+                    ].map(item => (
+                      <button
+                        key={item.word}
+                        onClick={() => speakSandboxWord(item.word, item.taWord)}
+                        className="card-interactive"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '16px',
+                          padding: '18px 24px',
+                          borderRadius: '20px',
+                          background: 'white',
+                          border: '2px solid #F1F5F9',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <span style={{ fontSize: '2.5rem' }}>{item.icon}</span>
+                        <div>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A' }}>{lang === 'ta' ? item.taWord : item.word}</div>
+                          <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontWeight: 700 }}>{item.cue}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '24px' }}>
+                    <button onClick={() => navigate('/activity/communication')} className="btn-neon" style={{ padding: '12px 28px', fontSize: '0.95rem', borderRadius: '100px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      Launch Full 7-Day Curriculum <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Emotion Mirror */}
+            {activeSandboxTab === 'emotion' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+                {[
+                  { id: 'happy', emoji: '😊', label: 'Happy', taLabel: 'மகிழ்ச்சி', color: '#10B981', bg: '#ECFDF5', tip: 'Smiling activates calm dopamine circuits.' },
+                  { id: 'calm', emoji: '😌', label: 'Calm', taLabel: 'அமைதி', color: '#3B82F6', bg: '#EFF6FF', tip: 'Slow rhythmic breaths restore focus.' },
+                  { id: 'surprised', emoji: '😲', label: 'Surprised', taLabel: 'ஆச்சரியம்', color: '#F59E0B', bg: '#FEF3C7', tip: 'Wide eyes take in new information.' },
+                  { id: 'proud', emoji: '🌟', label: 'Proud', taLabel: 'பெருமை', color: '#8B5CF6', bg: '#F5F3FF', tip: 'Celebrate your completed milestones!' }
+                ].map(emo => (
+                  <div
+                    key={emo.id}
+                    onClick={() => { setActiveEmotionCard(emo.id); speakSandboxWord(emo.label, emo.taLabel); }}
+                    className="card-interactive"
+                    style={{
+                      padding: '28px 24px',
+                      borderRadius: '24px',
+                      background: activeEmotionCard === emo.id ? emo.bg : 'white',
+                      border: activeEmotionCard === emo.id ? `2.5px solid ${emo.color}` : '1.5px solid #F1F5F9',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <span style={{ fontSize: '4rem' }}>{emo.emoji}</span>
+                    <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A' }}>{lang === 'ta' ? emo.taLabel : emo.label}</span>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', fontWeight: 650, lineHeight: 1.4 }}>{emo.tip}</p>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: emo.color, textTransform: 'uppercase' }}>Tap to Hear</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Tab 3: Hero Academy */}
+            {activeSandboxTab === 'academy' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+                {[
+                  { icon: '🅰️', title: 'Letter A', word: 'Apple', taWord: 'ஆப்பிள்', color: '#EF4444', bg: '#FEF2F2' },
+                  { icon: '1️⃣', title: 'Number 1', word: 'One Sun', taWord: 'ஒரு சூரியன்', color: '#10B981', bg: '#ECFDF5' },
+                  { icon: '🔴', title: 'Color Red', word: 'Red Balloon', taWord: 'சிவப்பு பலூன்', color: '#EC4899', bg: '#FDF2F8' }
+                ].map(item => (
+                  <div
+                    key={item.title}
+                    onClick={() => speakSandboxWord(`${item.title}: ${item.word}`, `${item.title}: ${item.taWord}`)}
+                    className="card-interactive"
+                    style={{
+                      padding: '32px 24px',
+                      borderRadius: '24px',
+                      background: 'white',
+                      border: `2px solid ${item.color}25`,
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <span style={{ fontSize: '4.5rem' }}>{item.icon}</span>
+                    <h4 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: '#0F172A' }}>{item.title}</h4>
+                    <span style={{ fontSize: '1.05rem', fontWeight: 800, color: item.color }}>{lang === 'ta' ? item.taWord : item.word}</span>
+                    <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 800, textTransform: 'uppercase' }}>Tap to Pronounce</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+        </div>
+      </section>
+
+      {/* Dedicated Role Portals Hub */}
+      <section style={{ padding: '100px 40px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <div className="badge-pill" style={{ background: '#F3E8FF', color: '#7C3AED', border: '1px solid #DDD6FE', marginBottom: '16px' }}>
+              <Compass size={16} /> {lang === 'en' ? 'SPECIALIZED PORTAL ACCESS' : 'சிறப்பு அணுகல் தளங்கள்'}
+            </div>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-1.5px', margin: '0 0 16px 0' }}>
+              {lang === 'en' ? 'Built for Every Member of the Care Team' : 'ஒவ்வொரு உறுப்பினருக்கும் அர்ப்பணிக்கப்பட்டது'}
+            </h2>
+            <p style={{ fontSize: '1.25rem', color: '#64748B', fontWeight: 600, maxWidth: '800px', margin: '0 auto' }}>
+              {lang === 'en'
+                ? 'Select your portal below for instant seamless therapy sessions, clinical telemedicine, or clinic supervision.'
+                : 'உங்கள் போர்ட்டலைத் தேர்வுசெய்து உடனடியாகத் தொடங்குங்கள்.'}
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
+            
+            {/* Card 1: Patient / Child */}
+            <div className="bento-card card-interactive" style={{ padding: '40px', background: 'white', borderRadius: '32px', border: '1.5px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 15px 35px rgba(0,0,0,0.03)' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, #FDF2F8, #FCE7F3)', color: '#EC4899', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(236,72,153,0.15)' }}>
+                    <Heart size={32} />
+                  </div>
+                  <span className="badge-pill" style={{ background: '#FDF2F8', color: '#EC4899', fontSize: '0.75rem' }}>CHILD & PARENT</span>
+                </div>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: '0 0 12px' }}>Parent & Child Galaxy</h3>
+                <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, margin: '0 0 24px' }}>
+                  Daily structured routines, 7-day Panda communication module, and calming sensory mini-games designed for neurodiverse comfort.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+                  {['Panda Speech Ladder', 'Emotion Explorer & Mirror', 'Daily Routine Sequencer', 'Star Rewards & Streaks'].map(feat => (
+                    <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 700, color: '#334155' }}>
+                      <Check size={16} color="#10B981" /> {feat}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link to="/login" style={{ textDecoration: 'none' }}>
+                  <button className="btn-neon" style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: 800, fontSize: '1rem', background: 'linear-gradient(135deg, #EC4899, #F43F5E)' }}>
+                    Parent Sign In
+                  </button>
+                </Link>
+                <button
+                  onClick={() => handleDirectPortalLaunch('patient')}
+                  style={{ width: '100%', padding: '12px', borderRadius: '16px', border: '1.5px dashed #FDA4AF', background: '#FFF1F2', color: '#E11D48', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Zap size={16} /> 1-Click Launch Demo Patient
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Doctor */}
+            <div className="bento-card card-interactive" style={{ padding: '40px', background: 'white', borderRadius: '32px', border: '1.5px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 15px 35px rgba(0,0,0,0.03)' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(16,185,129,0.15)' }}>
+                    <Stethoscope size={32} />
+                  </div>
+                  <span className="badge-pill" style={{ background: '#ECFDF5', color: '#10B981', fontSize: '0.75rem' }}>PEDIATRIC CLINICIAN</span>
+                </div>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: '0 0 12px' }}>Doctor Clinical Suite</h3>
+                <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, margin: '0 0 24px' }}>
+                  Telemetry monitoring, milestone review, clinical directive dispatch, and secure telehealth consultation notes.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+                  {['Real-time Telemetry Feeds', 'Level & Goal Customization', 'Clinical Directives Engine', 'Patient Consultation Chat'].map(feat => (
+                    <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 700, color: '#334155' }}>
+                      <Check size={16} color="#10B981" /> {feat}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link to="/login" style={{ textDecoration: 'none' }}>
+                  <button className="btn-neon" style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: 800, fontSize: '1rem', background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+                    Doctor Sign In
+                  </button>
+                </Link>
+                <button
+                  onClick={() => handleDirectPortalLaunch('doctor')}
+                  style={{ width: '100%', padding: '12px', borderRadius: '16px', border: '1.5px dashed #A7F3D0', background: '#ECFDF5', color: '#059669', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Zap size={16} /> 1-Click Launch Demo Doctor
+                </button>
+              </div>
+            </div>
+
+            {/* Card 3: Admin */}
+            <div className="bento-card card-interactive" style={{ padding: '40px', background: 'white', borderRadius: '32px', border: '1.5px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 15px 35px rgba(0,0,0,0.03)' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, #F3E8FF, #EDE9FE)', color: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(124,58,237,0.15)' }}>
+                    <Shield size={32} />
+                  </div>
+                  <span className="badge-pill" style={{ background: '#F3E8FF', color: '#7C3AED', fontSize: '0.75rem' }}>ADMINISTRATION</span>
+                </div>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: '0 0 12px' }}>Clinic Governance Hub</h3>
+                <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, margin: '0 0 24px' }}>
+                  Multi-provider management, case load balancing, clinical governance directives, and audit log monitoring.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+                  {['Clinician & User Directory', 'Clinic-Wide Directives', 'System Performance Metrics', 'HIPAA Audit Trail Logs'].map(feat => (
+                    <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 700, color: '#334155' }}>
+                      <Check size={16} color="#10B981" /> {feat}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link to="/login" style={{ textDecoration: 'none' }}>
+                  <button className="btn-neon" style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: 800, fontSize: '1rem', background: 'linear-gradient(135deg, #7C3AED, #4F46E5)' }}>
+                    Admin Sign In
+                  </button>
+                </Link>
+                <button
+                  onClick={() => handleDirectPortalLaunch('admin')}
+                  style={{ width: '100%', padding: '12px', borderRadius: '16px', border: '1.5px dashed #DDD6FE', background: '#F5F3FF', color: '#7C3AED', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Zap size={16} /> 1-Click Launch Demo Admin
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </section>
 
       {/* Understanding Autism Section */}

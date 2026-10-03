@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import DoctorChatTab from '../components/DoctorChatTab';
 import { 
   LayoutDashboard, Users, FileText, Activity, MessageSquare, LogOut, Bell, Search, 
   CheckCircle2, Clock, Plus, Video, ChevronRight, Filter, Send, MoreHorizontal, 
@@ -690,25 +691,7 @@ const renderAnalytics = () => (
     </div>
   );
 
-const renderConsultations = () => (
-    <div className="animate-slide-up">
-      <div className="bento-card" style={{ padding: '24px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '20px', margin: 0 }}>Parent Consultations</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {patients.slice(0, 3).map(p => (
-            <div key={p.id} className="bento-card" style={{ padding: '16px', display: 'flex', gap: '16px', alignItems: 'center', background: 'white', border: '1px solid #F1F5F9', borderRadius: '8px' }}>
-               <div style={{ width: '44px', height: '44px', background: 'var(--slate-100)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.15rem', fontWeight: 800 }}>{p.name.charAt(0)}</div>
-               <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 800, fontSize: '1rem', margin: 0, color: '#0F172A' }}>{p.name} <span style={{ color: 'var(--slate-400)', fontWeight: 600, fontSize: '0.85rem' }}>(Parent: Mrs. {p.name.split(' ')[1]})</span></p>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--slate-500)', fontWeight: 600, margin: '2px 0 0' }}>"The speech module is a bit difficult for him..."</p>
-               </div>
-               <button className="btn-neon" style={{ padding: '8px 16px', fontSize: '0.85rem' }}><MessageSquare size={14}/> Reply</button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+
 
   const renderProfile = () => (
     <div className="animate-slide-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr', gap: '32px', maxWidth: '1250px', margin: '0 auto', width: '100%' }}>
@@ -926,7 +909,7 @@ const renderConsultations = () => (
           {currentTab === 'dashboard' && renderDashboard()}
           {currentTab === 'patients' && renderPatients()}
           {currentTab === 'analytics' && renderAnalytics()}
-          {currentTab === 'messages' && renderConsultations()}
+          {currentTab === 'messages' && <DoctorChatTab user={user} />}
           {currentTab === 'profile' && renderProfile()}
         </div>
       </main>

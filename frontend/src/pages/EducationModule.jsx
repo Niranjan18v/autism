@@ -1,7 +1,57 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Map, Shapes, Hash, Type, Palette, Dog, ChevronRight, Star, Award, PlayCircle, Sparkles } from 'lucide-react'
+import { ArrowLeft, BookOpen, Map, Shapes, Hash, Type, Palette, Dog, ChevronRight, Star, Award, PlayCircle, Sparkles, Volume2, CheckCircle2, RotateCcw, Flame, Trophy, ThumbsUp } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
+
+
+// Web Audio Synth for rewarding educational chimes
+const playAudioTone = (type = 'pop') => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    if (type === 'pop') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(540, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'success') {
+      [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, now + i * 0.08);
+        gain.gain.setValueAtTime(0.2, now + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i * 0.08);
+        osc.stop(now + i * 0.08 + 0.3);
+      });
+    } else if (type === 'fanfare') {
+      [440, 554.37, 659.25, 880, 1108.73].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + i * 0.1);
+        gain.gain.setValueAtTime(0.25, now + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i * 0.1);
+        osc.stop(now + i * 0.1 + 0.4);
+      });
+    }
+  } catch (e) {}
+};
 
 // --- PREMIUM AAYU TEACHER COMPONENT ---
 const AayuTeacher = ({ isTalking, size = 250 }) => {
@@ -90,6 +140,9 @@ function EducationModule() {
   const [queue, setQueue] = useState([])
   const [levelComplete, setLevelComplete] = useState(false)
   const [isTalking, setIsTalking] = useState(false)
+  const [stars, setStars] = useState(120)
+  const [answeredCorrect, setAnsweredCorrect] = useState(false)
+  const [quizOptions, setQuizOptions] = useState([])
 
   const speak = (text, onComplete) => {
     if ('speechSynthesis' in window) {
@@ -117,21 +170,54 @@ function EducationModule() {
   }
 
   const generateRound = (currentQueue, level) => {
-    if (currentQueue.length === 0) { setLevelComplete(true); return; }
+    if (currentQueue.length === 0) {
+      setLevelComplete(true);
+      playAudioTone('fanfare');
+      return;
+    }
     const target = currentQueue[0]
     setTargetItem(target)
-    setCurrentStep(0)
+    setAnsweredCorrect(false)
+    playAudioTone('pop');
     
+    // Pick 2 random distractors for 3-choice interactive quiz
+    const allItems = level === 1 ? ALPHABET_DATA : level === 2 ? NUMBER_DATA : level === 3 ? COLOR_DATA : level === 4 ? ANIMAL_DATA : SHAPE_DATA;
+    const others = allItems.filter(i => (i.id || i.name) !== (target.id || target.name));
+    const shuffledOthers = [...others].sort(() => 0.5 - Math.random()).slice(0, 2);
+    const choices = [target, ...shuffledOthers].sort(() => 0.5 - Math.random());
+    setQuizOptions(choices);
+
     let text = ""
     const currentLvl = level || currentLevel
-    if (currentLvl === 1) text = `${target.letter} is for ${target.word}`
-    if (currentLvl === 2) text = `This is number ${target.num}. ${target.word}`
-    if (currentLvl === 3) text = `This is the color ${target.name}`
-    if (currentLvl === 4) text = `This is a ${target.name}. It goes ${target.sound}`
-    if (currentLvl === 5) text = `This shape is a ${target.name}`
+    if (language === 'ta') {
+      if (currentLvl === 1) text = `${target.taLetter} என்றால் ${target.taWord}`
+      else if (currentLvl === 2) text = `இது எண் ${target.taNum}. ${target.taWord}`
+      else if (currentLvl === 3) text = `இது ${target.taName} நிறம்`
+      else if (currentLvl === 4) text = `இது ${target.taName}`
+      else if (currentLvl === 5) text = `இது ${target.taName}`
+    } else {
+      if (currentLvl === 1) text = `${target.letter} is for ${target.word}`
+      else if (currentLvl === 2) text = `This is number ${target.num}. ${target.word}`
+      else if (currentLvl === 3) text = `This is the color ${target.name}`
+      else if (currentLvl === 4) text = `This is a ${target.name}. It goes ${target.sound}`
+      else if (currentLvl === 5) text = `This shape is a ${target.name}`
+    }
     
     speak(text)
   }
+
+  const handleChoiceClick = (choice) => {
+    const isMatch = (choice.id || choice.name) === (targetItem.id || targetItem.name);
+    if (isMatch) {
+      playAudioTone('success');
+      setStars(s => s + 10);
+      setAnsweredCorrect(true);
+      speak(language === 'ta' ? 'அருமை! மிகச் சரி!' : 'Super job! That is correct!');
+    } else {
+      playAudioTone('pop');
+      speak(language === 'ta' ? 'மீண்டும் முயற்சிக்கவும்!' : 'Try again hero!');
+    }
+  };
 
   const handleNext = () => {
     const next = queue.slice(1)
@@ -153,14 +239,22 @@ function EducationModule() {
         @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg) } 50% { transform: translateY(-20px) rotate(2deg) } }
       `}</style>
 
-      {/* Header */}
-      <header style={{ padding: '32px 64px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100 }}>
-        <button onClick={() => navigate('/dashboard/patient')} className="btn-pop bento-card" style={{ padding: '16px 40px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 800, fontSize: '1.2rem' }}>
-          <ArrowLeft size={24} /> EXIT ACADEMY
+      {/* Header with Star Badge */}
+      <header style={{ padding: '24px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100 }}>
+        <button onClick={() => navigate('/dashboard/patient')} className="btn-pop bento-card" style={{ padding: '12px 28px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 800, fontSize: '1.05rem', background: 'white' }}>
+          <ArrowLeft size={20} /> {language === 'en' ? 'Exit Academy' : 'வெளியேறு'}
         </button>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <button onClick={toggleLanguage} className="btn-pop bento-card" style={{ padding: '16px 40px', fontWeight: 800, fontSize: '1.2rem' }}>{language === 'en' ? 'தமிழ்' : 'English'}</button>
-          <button onClick={() => setCurrentLevel(null)} className="btn-pop bento-card" style={{ padding: '16px 40px' }}><Map size={24} /></button>
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+          {/* Star Counter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', borderRadius: '100px', background: '#FEF3C7', color: '#B45309', border: '1.5px solid #FDE68A', fontWeight: 900, fontSize: '1.1rem' }}>
+            <Star size={20} fill="#F59E0B" color="#F59E0B" /> {stars} {language === 'en' ? 'Stars' : 'நட்சத்திரங்கள்'}
+          </div>
+          <button onClick={toggleLanguage} className="btn-pop bento-card" style={{ padding: '12px 28px', fontWeight: 800, fontSize: '1.05rem', background: 'white' }}>
+            {language === 'en' ? 'தமிழ்' : 'English'}
+          </button>
+          <button onClick={() => setCurrentLevel(null)} className="btn-pop bento-card" style={{ padding: '12px 20px', background: 'white' }} title="Classes Map">
+            <Map size={20} />
+          </button>
         </div>
       </header>
 

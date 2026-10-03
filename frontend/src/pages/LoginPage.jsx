@@ -1,26 +1,69 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Stethoscope, Shield, Heart, Lock, Mail, Phone, Star, TrendingUp, Sparkles } from 'lucide-react'
+import { ArrowLeft, User, Stethoscope, Shield, Heart, Lock, Mail, Phone, Star, TrendingUp, Sparkles, AlertCircle, Loader, Eye, EyeOff, Zap } from 'lucide-react'
 
 function LoginPage() {
   const [activeTab, setActiveTab] = useState('patient')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
-  const handleLogin = (e) => {
+  const handleQuickFill = (role) => {
+    setActiveTab(role)
+    setError('')
+    if (role === 'patient') {
+      setEmail('arjun@test.com')
+      setPassword('password123')
+    } else if (role === 'doctor') {
+      setEmail('doctor@aura.com')
+      setPassword('password123')
+    } else if (role === 'admin') {
+      setEmail('admin@aura.com')
+      setPassword('password123')
+    }
+  }
+
+  const handleLogin = async (e) => {
     e.preventDefault()
-    if (activeTab === 'patient') navigate('/dashboard/patient')
-    else if (activeTab === 'doctor') navigate('/dashboard/doctor')
-    else navigate('/dashboard/admin')
+    setError('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: activeTab === 'patient' ? 'patient' : activeTab === 'doctor' ? 'doctor' : 'admin' })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Store user in localStorage
+        localStorage.setItem('user', JSON.stringify(data))
+        // Navigate based on role
+        if (activeTab === 'patient') navigate('/dashboard/patient')
+        else if (activeTab === 'doctor') navigate('/dashboard/doctor')
+        else navigate('/dashboard/admin')
+      } else {
+        setError(data.message || 'Login failed. Please check your credentials.')
+      }
+    } catch (err) {
+      setError('Cannot reach server. Make sure the backend is running on port 5000.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#F8FAFC', fontFamily: 'system-ui, -apple-system, sans-serif', overflow: 'hidden' }}>
+    <div className="login-split" style={{ background: '#F8FAFC', fontFamily: 'system-ui, -apple-system, sans-serif', overflow: 'hidden' }}>
       
       {styleTag}
 
       {/* Left Column: Premium Visual Showcase */}
-      <div className="login-showcase-column" style={{ 
-        flex: '0 0 45%', 
+      <div className="login-showcase" style={{ 
         background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%)', 
         position: 'relative',
         display: 'flex',
@@ -116,14 +159,13 @@ function LoginPage() {
 
       {/* Right Column: Sleek Form Column */}
       <div style={{ 
-        flex: 1, 
         display: 'flex', 
         flexDirection: 'column', 
         justifyContent: 'center',
         padding: '80px 100px',
         background: 'white',
         overflowY: 'auto'
-      }} className="login-form-column">
+      }} className="login-form-container">
         
         <div style={{ maxWidth: '480px', width: '100%', margin: '0 auto' }}>
           
@@ -185,6 +227,36 @@ function LoginPage() {
             ))}
           </div>
 
+          {/* 1-Click Quick Demo Sign-in Row */}
+          <div style={{ marginBottom: '28px', background: 'rgba(248, 250, 252, 0.95)', border: '1px dashed #CBD5E1', borderRadius: '16px', padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+              <Zap size={14} color="#F59E0B" /> 1-Click Demo Auto-Fill:
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('patient')}
+                style={{ padding: '6px 12px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid #FECDD3', background: activeTab === 'patient' && email === 'arjun@test.com' ? '#FFE4E6' : 'white', color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
+              >
+                👶 Child / Parent
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('doctor')}
+                style={{ padding: '6px 12px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid #A7F3D0', background: activeTab === 'doctor' && email === 'doctor@aura.com' ? '#D1FAE5' : 'white', color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
+              >
+                🩺 Pediatrician
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('admin')}
+                style={{ padding: '6px 12px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid #DDD6FE', background: activeTab === 'admin' && email === 'admin@aura.com' ? '#EDE9FE' : 'white', color: '#7C3AED', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
+              >
+                🛡️ Clinic Admin
+              </button>
+            </div>
+          </div>
+
           {/* Interactive Form */}
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
@@ -201,7 +273,9 @@ function LoginPage() {
                 <input 
                   type="text" 
                   className="login-input" 
-                  placeholder={activeTab === 'patient' ? "+91 98XXX XXXX" : "name@hospital.com"} 
+                  placeholder={activeTab === 'patient' ? "+91 98XXX XXXX or email" : "name@hospital.com"}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required 
                   style={{
                     width: '100%',
@@ -226,13 +300,15 @@ function LoginPage() {
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#EF4444', zIndex: 5 }} />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   className="login-input" 
-                  placeholder="••••••••" 
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required 
                   style={{
                     width: '100%',
-                    padding: '16px 16px 16px 52px',
+                    padding: '16px 52px 16px 52px',
                     borderRadius: '14px',
                     border: '1.5px solid #E2E8F0',
                     background: 'white',
@@ -242,8 +318,23 @@ function LoginPage() {
                     transition: 'all 0.2s ease'
                   }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', zIndex: 5 }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '12px', color: '#DC2626', fontWeight: 700, fontSize: '0.9rem' }}>
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
 
             {/* Remember & Forgot options */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -274,15 +365,18 @@ function LoginPage() {
                 gap: '8px'
               }}
             >
-              <span>CONTINUE TO DASHBOARD</span>
-              <span style={{ fontSize: '1.25rem' }}>⮕</span>
+              {loading ? (
+                <><Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> SIGNING IN...</>
+              ) : (
+                <><span>CONTINUE TO DASHBOARD</span><span style={{ fontSize: '1.25rem' }}>⮕</span></>
+              )}
             </button>
           </form>
 
           {/* Footer clinical registrar link */}
           <div style={{ marginTop: '40px', textAlign: 'center', borderTop: '1px solid #E2E8F0', paddingTop: '28px' }}>
             <p style={{ fontWeight: 700, color: 'var(--slate-400)', fontSize: '0.95rem', margin: 0 }}>
-              New to AURA? <span style={{ color: '#7C3AED', fontWeight: 800, cursor: 'pointer' }} className="hover-underline">Register via Clinic</span>
+              New to AURA? <Link to="/register" style={{ color: '#7C3AED', fontWeight: 800, textDecoration: 'none' }} className="hover-underline">Register via Clinic</Link>
             </p>
           </div>
 

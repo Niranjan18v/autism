@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables (DO NOT commit)
+.env
+.env.*
+server/.env
+backend/.env
+
+# Temporary / Scratch scripts
+scratch_*
+fix_*.cjs
+refactor_*.cjs
