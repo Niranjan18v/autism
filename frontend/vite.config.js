@@ -6,6 +6,7 @@ export default defineConfig({
   base: '/autism/',
   plugins: [react()],
   root: 'src',
+  envDir: '../',
   publicDir: '../public',
   build: {
     outDir: '../dist',
