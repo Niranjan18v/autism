@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Stethoscope, Shield, Heart, Lock, Mail, Phone, Star, TrendingUp, Sparkles, AlertCircle, Loader, Eye, EyeOff, Zap } from 'lucide-react'
+import { ArrowLeft, User, Stethoscope, Shield, Heart, Lock, Mail, Phone, Star, TrendingUp, Sparkles, AlertCircle, Loader, Eye, EyeOff } from 'lucide-react'
 import API_BASE from '../api'
 
 function LoginPage() {
@@ -12,20 +12,6 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
-  const handleQuickFill = (role) => {
-    setActiveTab(role)
-    setError('')
-    if (role === 'patient') {
-      setEmail('arjun@test.com')
-      setPassword('password123')
-    } else if (role === 'doctor') {
-      setEmail('doctor@aura.com')
-      setPassword('password123')
-    } else if (role === 'admin') {
-      setEmail('admin@aura.com')
-      setPassword('password123')
-    }
-  }
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -228,35 +214,6 @@ function LoginPage() {
             ))}
           </div>
 
-          {/* 1-Click Quick Demo Sign-in Row */}
-          <div style={{ marginBottom: '28px', background: 'rgba(248, 250, 252, 0.95)', border: '1px dashed #CBD5E1', borderRadius: '16px', padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
-              <Zap size={14} color="#F59E0B" /> 1-Click Demo Auto-Fill:
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('patient')}
-                style={{ padding: '6px 12px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid #FECDD3', background: activeTab === 'patient' && email === 'arjun@test.com' ? '#FFE4E6' : 'white', color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
-              >
-                👶 Child / Parent
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('doctor')}
-                style={{ padding: '6px 12px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid #A7F3D0', background: activeTab === 'doctor' && email === 'doctor@aura.com' ? '#D1FAE5' : 'white', color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
-              >
-                🩺 Pediatrician
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin')}
-                style={{ padding: '6px 12px', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid #DDD6FE', background: activeTab === 'admin' && email === 'admin@aura.com' ? '#EDE9FE' : 'white', color: '#7C3AED', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.15s ease' }}
-              >
-                🛡️ Clinic Admin
-              </button>
-            </div>
-          </div>
 
           {/* Interactive Form */}
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
