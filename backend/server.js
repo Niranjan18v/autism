@@ -42,7 +42,9 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS blocked: ${origin}`));
+    // Don't throw – just deny with false
+    console.warn(`CORS denied for origin: ${origin}`);
+    callback(null, false);
   },
   credentials: true,
 }));
@@ -52,7 +54,7 @@ app.use(express.json());
 app.use('/api', (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({
-      message: 'MongoDB Connection Failed: Your IP address is not whitelisted on MongoDB Atlas. Please go to cloud.mongodb.com -> Network Access -> Add IP Address (0.0.0.0/0).'
+      message: 'Database not connected. Please check MongoDB Atlas Network Access settings.'
     });
   }
   next();
@@ -75,10 +77,10 @@ app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.method} ${req.url} not found` });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err.message);
-  res.status(500).json({ message: 'Internal server error' });
+// Global error handler (Express 5 requires all 4 params)
+app.use((err, req, res, _next) => {
+  console.error('Server Error:', err.stack || err.message || err);
+  res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
 });
 
 const PORT = process.env.PORT || 5000;
