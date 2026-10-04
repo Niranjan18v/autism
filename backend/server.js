@@ -15,8 +15,12 @@ import messageRoutes from './routes/messages.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from project root (one level up from /server)
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Load .env - works both locally (root .env) and on Render (backend/.env)
+dotenv.config({ path: path.join(__dirname, '.env') });
+// Fallback: also try one level up (local dev monorepo root)
+if (!process.env.MONGO_URI) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 // Connect to MongoDB
 connectDB();
@@ -24,8 +28,22 @@ connectDB();
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+  'https://niranjan18v.github.io',            // GitHub Pages
+  process.env.FRONTEND_URL,                   // custom domain (optional)
+].filter(Boolean);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS blocked: ${origin}`));
+  },
   credentials: true,
 }));
 app.use(express.json());

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Baby, Users, Heart, Phone, Building, Star, AlertCircle, Lock, Mail, ChevronRight, Sparkles, Shield } from 'lucide-react'
+import API_BASE from '../api'
 
 function PatientRegister() {
   const navigate = useNavigate()
@@ -29,7 +30,7 @@ function PatientRegister() {
 
   React.useEffect(() => {
     // Fetch available doctors based on selected clinic
-    const url = clinic ? `/api/doctor/list?clinic=${encodeURIComponent(clinic)}` : '/api/doctor/list'
+    const url = clinic ? `${API_BASE}/api/doctor/list?clinic=${encodeURIComponent(clinic)}` : `${API_BASE}/api/doctor/list`
     fetch(url)
       .then(res => res.json())
       .then(data => {
@@ -66,7 +67,7 @@ function PatientRegister() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

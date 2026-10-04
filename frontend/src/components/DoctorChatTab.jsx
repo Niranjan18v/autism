@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, MessageSquare } from 'lucide-react';
+import API_BASE from '../api';
 
 const DoctorChatTab = ({ user }) => {
   const [inbox, setInbox] = useState([]);
@@ -12,7 +13,7 @@ const DoctorChatTab = ({ user }) => {
   useEffect(() => {
     const fetchInbox = () => {
       if (!user?._id) return;
-      fetch(`/api/messages/inbox/${user._id}`)
+      fetch(`${API_BASE}/api/messages/inbox/${user._id}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) setInbox(data);
@@ -28,7 +29,7 @@ const DoctorChatTab = ({ user }) => {
   useEffect(() => {
     if (!activePatient || !user?._id) return;
     const fetchMsgs = () => {
-      fetch(`/api/messages/conversation?userId=${user._id}&otherUserId=${activePatient.user._id}`)
+      fetch(`${API_BASE}/api/messages/conversation?userId=${user._id}&otherUserId=${activePatient.user._id}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) setMessages(data);
@@ -58,7 +59,7 @@ const DoctorChatTab = ({ user }) => {
     setMessages(prev => [...prev, tempMsg]);
 
     try {
-      const res = await fetch('/api/messages/send', {
+      const res = await fetch(`${API_BASE}/api/messages/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senderId: user._id, receiverId: activePatient.user._id, text })

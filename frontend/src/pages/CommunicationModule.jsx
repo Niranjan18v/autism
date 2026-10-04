@@ -8,6 +8,7 @@ import {
   Flame, Zap, Trophy, ThumbsUp, Send, CheckCheck
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
+import API_BASE from '../api'
 
 /* =========================================================================
    SYNTHESIZED SOUND EFFECTS ENGINE
@@ -873,7 +874,7 @@ export default function CommunicationModule() {
   // Load backend stats
   useEffect(() => {
     if (currentUserId && currentUserId !== 'demo_user') {
-      fetch(`/api/patient/communication-progress/${currentUserId}`)
+      fetch(`${API_BASE}/api/patient/communication-progress/${currentUserId}`)
         .then(res => res.json())
         .then(data => {
           if (data && data.completedDays) {
@@ -1049,7 +1050,7 @@ export default function CommunicationModule() {
     setCelebrationModal(true)
 
     if (currentUserId && currentUserId !== 'demo_user') {
-      fetch(`/api/patient/communication-progress/${currentUserId}`, {
+      fetch(`${API_BASE}/api/patient/communication-progress/${currentUserId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

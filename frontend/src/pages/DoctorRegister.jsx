@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Stethoscope, Phone, Building, AlertCircle, Lock, Mail, ChevronRight, Sparkles, Shield, Award, BookOpen } from 'lucide-react'
+import API_BASE from '../api'
 
 function DoctorRegister() {
   const navigate = useNavigate()
@@ -51,7 +52,7 @@ function DoctorRegister() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -28,6 +28,7 @@ dist-ssr
 .env.*
 server/.env
 backend/.env
+!frontend/.env.production
 
 # Temporary / Scratch scripts
 scratch_*

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Stethoscope, Shield, Heart, Lock, Mail, Phone, Star, TrendingUp, Sparkles, AlertCircle, Loader, Eye, EyeOff, Zap } from 'lucide-react'
+import API_BASE from '../api'
 
 function LoginPage() {
   const [activeTab, setActiveTab] = useState('patient')
@@ -32,7 +33,7 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, role: activeTab === 'patient' ? 'patient' : activeTab === 'doctor' ? 'doctor' : 'admin' })
@@ -51,7 +52,7 @@ function LoginPage() {
         setError(data.message || 'Login failed. Please check your credentials.')
       }
     } catch (err) {
-      setError('Cannot reach server. Make sure the backend is running on port 5000.')
+      setError('Cannot reach server. Please check your network connection or backend status.')
     } finally {
       setLoading(false)
     }

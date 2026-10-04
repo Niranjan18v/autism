@@ -8,6 +8,7 @@ import {
   BarChart3, Activity, Star, Phone, Mail, MapPin, Calendar
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
+import API_BASE from '../api'
 
 /* ──────────────────────────────────────
    Small re-usable badge helper
@@ -80,7 +81,7 @@ function AdminDashboard() {
   /* ── data fetch ── */
   const fetchAdminData = () => {
     setLoading(true)
-    fetch('/api/admin/data')
+    fetch(`${API_BASE}/api/admin/data`)
       .then(r => r.json())
       .then(d => { if (d && !d.message) setAdminData(d) })
       .catch(() => showToast('Network error – could not load data', 'error'))
@@ -126,7 +127,7 @@ function AdminDashboard() {
   const handleSavePatient = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch(`/api/admin/patient/${editingPatient._id}`, {
+      const res = await fetch(`${API_BASE}/api/admin/patient/${editingPatient._id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patientForm)
       })
@@ -147,7 +148,7 @@ function AdminDashboard() {
   const handleSaveDoctor = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch(`/api/admin/doctor/${editingDoctor._id}`, {
+      const res = await fetch(`${API_BASE}/api/admin/doctor/${editingDoctor._id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(doctorForm)
       })
@@ -159,7 +160,7 @@ function AdminDashboard() {
   const handleConfirmDelete = async () => {
     if (!confirmDelete) return
     try {
-      const res = await fetch(`/api/admin/user/${confirmDelete.userId}`, { method: 'DELETE' })
+      const res = await fetch(`${API_BASE}/api/admin/user/${confirmDelete.userId}`, { method: 'DELETE' })
       if (res.ok) { showToast(`${confirmDelete.name} removed from system`); setConfirmDelete(null); fetchAdminData() }
       else showToast('Delete failed', 'error')
     } catch { showToast('Network error', 'error') }

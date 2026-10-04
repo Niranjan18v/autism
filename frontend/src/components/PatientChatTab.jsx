@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from 'lucide-react';
+import API_BASE from '../api';
 
 const PatientChatTab = ({ user }) => {
   const [messages, setMessages] = useState([]);
@@ -11,12 +12,12 @@ const PatientChatTab = ({ user }) => {
     const userId = user?._id || user?.id;
     if (!userId) return;
 
-    fetch(`/api/messages/doctor-for-patient/${userId}`)
+    fetch(`${API_BASE}/api/messages/doctor-for-patient/${userId}`)
       .then(res => res.json())
       .then(data => {
         if (data.doctorUserId) {
           setDoctorInfo(data);
-          fetch(`/api/messages/conversation?userId=${userId}&otherUserId=${data.doctorUserId}`)
+          fetch(`${API_BASE}/api/messages/conversation?userId=${userId}&otherUserId=${data.doctorUserId}`)
             .then(res => res.json())
             .then(msgs => {
               if (Array.isArray(msgs)) setMessages(msgs);
@@ -45,7 +46,7 @@ const PatientChatTab = ({ user }) => {
     setMessages(prev => [...prev, tempMsg]);
 
     try {
-      const res = await fetch('/api/messages/send', {
+      const res = await fetch(`${API_BASE}/api/messages/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senderId: userId, receiverId: doctorInfo.doctorUserId, text })

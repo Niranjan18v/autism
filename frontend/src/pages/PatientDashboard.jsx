@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PatientChatTab from '../components/PatientChatTab';
+import API_BASE from '../api';
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const PatientDashboard = () => {
     setUser(parsed);
 
     // Fetch full patient profile from MongoDB
-    fetch(`/api/patient/profile/${parsed._id}`)
+    fetch(`${API_BASE}/api/patient/profile/${parsed._id}`)
       .then(res => res.json())
       .then(data => {
         if (data && !data.message) {
@@ -1719,7 +1720,7 @@ const PatientProfileTab = ({ user, language, activeFrame = 'explorer', childLeve
   React.useEffect(() => {
     const userId = user?._id || user?.id;
     if (!userId) return;
-    fetch('/api/patient/profile/' + userId)
+    fetch(`${API_BASE}/api/patient/profile/${userId}`)
       .then(r => r.json())
       .then(data => {
         if (data && !data.message) {
@@ -1743,7 +1744,7 @@ const PatientProfileTab = ({ user, language, activeFrame = 'explorer', childLeve
     setSaveMsg('');
     const userId = user?._id || user?.id;
     try {
-      const res = await fetch('/api/patient/profile/' + userId, {
+      const res = await fetch(`${API_BASE}/api/patient/profile/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
